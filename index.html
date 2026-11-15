@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0c6b4f"><meta name="application-name" content="GoalTracker"><meta name="version" content="1.0.3"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GoalTracker"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0c6b4f"><meta name="application-name" content="GoalTracker"><meta name="version" content="1.0.4"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GoalTracker"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Torzähler Handball</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
@@ -106,7 +106,7 @@ h2:first-child { margin-top: 12px; }
 .team .num { font-family: var(--font-display); font-weight: 700; font-size: 56px; line-height: 1; font-variant-numeric: tabular-nums; }
 .mid { text-align: center; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
 .halflbl { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
-.clock { font-family: var(--font-display); font-weight: 700; font-size: clamp(38px, 12vw, 56px); line-height: 1; font-variant-numeric: tabular-nums; }
+.clock { font-family: var(--font-display); font-weight: 700; font-size: clamp(28px, 9.5vw, 48px); line-height: 1.1; white-space: nowrap; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
 .clockof { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
 .tbtns { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 6px; }
 .tbtns button { font-weight: 600; min-height: 46px; padding: 0 4px; font-size: 15px; }
@@ -441,7 +441,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
   var POS = [['L','Links'],['HL','Halblinks'],['M','Mitte'],['HR','Halbrechts'],['R','Rechts']];
   var POSNAME = {L:'Links',HL:'Halblinks',M:'Mitte',HR:'Halbrechts',R:'Rechts'};
   var KEY = 'torzaehler-v1';
-  var VERSION = '1.0.3', VERSION_DATE = '15.11.2026';
+  var VERSION = '1.0.4', VERSION_DATE = '15.11.2026';
   var FB_CONFIG = {"apiKey":"AIzaSyCfTNJIWwUvcZCbFzW39auRzkgU_9MoGVY","authDomain":"goaltracker-b0bd2.firebaseapp.com","databaseURL":"https://goaltracker-b0bd2-default-rtdb.europe-west1.firebasedatabase.app","projectId":"goaltracker-b0bd2","storageBucket":"goaltracker-b0bd2.firebasestorage.app","messagingSenderId":"466673267446","appId":"1:466673267446:web:512afb5f483f9a7a2f72d7"};
   document.getElementById('ver').textContent = 'GoalTracker · Version ' + VERSION + ' · ' + VERSION_DATE;
   var $ = function (id) { return document.getElementById(id); };
@@ -463,7 +463,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
 
   var view = (S.roster.H.length || S.roster.G.length || S.events.length || (S.live && S.live.on)) ? 'game' : 'home';
   var watching = false, watchId = null, ADMIN = null, archived = false;
-  var sel = null, pos = null, resetArmed = false, resetTimer = null, stopArmed = false, stopTimer = null, wl = null;
+  var sel = null, pos = null, resetArmed = false, resetTimer = null, stopArmed = false, newArmed = false, stopTimer = null, wl = null;
 
   function TN(t) { return S.teamNames[t] || (t === 'H' ? 'Heim' : 'Gast'); }
   function nm(t, n) { return (S.names[t] && S.names[t][n]) || ''; }
@@ -490,8 +490,8 @@ tr.total td { font-weight: 700; background: var(--bg); }
     $('clock').textContent = fmt(elapsed());
     $('clockOf').textContent = 'von ' + fmt(T.len * 60000);
     $('halfLbl').textContent = T.phase === 'finished' ? 'Spielende' : T.half + '. Halbzeit' + (T.phase === 'running' ? '' : T.phase === 'paused' ? ' · Pause' : '');
-    $('btnStart').disabled = T.phase === 'running' || T.phase === 'finished';
-    $('btnStart').textContent = T.phase === 'paused' ? 'Weiter' : (T.half === 2 && T.phase === 'ready' ? '2. Halbzeit' : 'Start');
+    $('btnStart').disabled = T.phase === 'running';
+    $('btnStart').textContent = T.phase === 'finished' ? (newArmed ? 'Sicher? Alles löschen' : 'Neues Spiel') : T.phase === 'paused' ? 'Weiter' : (T.half === 2 && T.phase === 'ready' ? '2. Halbzeit' : 'Start');
     $('btnPause').disabled = T.phase !== 'running';
     $('btnStop').disabled = T.phase === 'finished' || (T.phase === 'ready' && T.elapsed === 0);
     $('btnStop').textContent = stopArmed ? (T.half === 1 ? 'Halbzeit Ende?' : 'Spielende?') : 'Stopp';
@@ -718,8 +718,21 @@ tr.total td { font-weight: 700; background: var(--bg); }
     save(); render();
   };
 
+  function askKeepRoster() {
+    if (!S.roster.H.length && !S.roster.G.length) return;
+    var keep = true;
+    try { keep = window.confirm('Kader vom letzten Spiel übernehmen?\n\nOK = Spieler beider Mannschaften behalten\nAbbrechen = Kader leeren'); } catch (e) {}
+    if (!keep) { S.roster = { H: [], G: [] }; S.names = { H: {}, G: {} }; sel = null; }
+  }
   $('btnStart').onclick = function () {
     var T = S.timer;
+    if (T.phase === 'finished') {
+      if (!newArmed) { newArmed = true; renderTimer(); say('Das letzte Spiel ist beendet. Nochmal tippen: Es wird gespeichert (Meine Spiele) und ein neues Spiel beginnt.'); setTimeout(function () { newArmed = false; renderTimer(); }, 5000); return; }
+      newArmed = false; archiveCurrent(); S.gid = null;
+      S.events = []; S.oppGoals = []; S.oppK = 0; S.timer = defTimer(S.timer.len); sel = null; pos = null;
+      askKeepRoster();
+      save(); render(); say('Neues Spiel bereit. Mit Start geht es los.'); return;
+    }
     if (T.phase === 'ready' || T.phase === 'paused') { T.startedAt = Date.now(); T.phase = 'running'; say(''); save(); render(); }
   };
   $('btnPause').onclick = function () {
@@ -988,15 +1001,16 @@ tr.total td { font-weight: 700; background: var(--bg); }
     var a = loadArch();
     $('archList').innerHTML = a.length ? a.map(function (x) {
       var st = x.state, r = calcArch(st), d = new Date(x.savedAt), p2 = function (n) { return ('0' + n).slice(-2); };
+      var cur = !watching && S.gid && x.id === S.gid && S.timer.phase !== 'finished';
       var date = p2(d.getDate()) + '.' + p2(d.getMonth() + 1) + '.' + d.getFullYear() + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes());
       var tn = st.teamNames || { H: 'Heim', G: 'Gast' };
       var main = st.mult ? r.H.m + ' : ' + r.G.m : r.H.g + ' : ' + r.G.g;
       var other = st.mult ? 'ohne Mult.: ' + r.H.g + ' : ' + r.G.g : 'mit Mult.: ' + r.H.m + ' : ' + r.G.m;
-      return '<div class="aitem"><button class="gitem" data-a="' + esc(x.id) + '"><span class="gt">' + esc(tn.H) + ' – ' + esc(tn.G) + '</span><span class="gs">' + main + '</span><span class="sub">' + date + ' · ' + other + '</span></button>' +
+      return '<div class="aitem"><button class="gitem" data-a="' + esc(x.id) + '"><span class="gt">' + esc(tn.H) + ' – ' + esc(tn.G) + '</span><span class="gs">' + main + '</span><span class="sub">' + (cur ? '<b class="livedot">● AKTUELLES SPIEL</b> · ' : '') + date + ' · ' + other + '</span></button>' +
         '<button class="danger adel" data-ad="' + esc(x.id) + '">' + (archArm === x.id ? 'Wirklich löschen?' : 'Löschen') + '</button></div>';
     }).join('') : '<p class="empty">Noch keine Spiele gespeichert. Ein Spiel wird automatisch gespeichert, wenn du es beendest oder ein neues Spiel beginnst.</p>';
   }
-  function openArchiveList() { archArm = null; view = 'archive'; render(); window.scrollTo(0, 0); }
+  function openArchiveList() { archiveCurrent(); archArm = null; view = 'archive'; render(); window.scrollTo(0, 0); }
   function openArchived(id) {
     var x = loadArch().filter(function (y) { return y.id === id; })[0];
     if (!x) return;
@@ -1085,6 +1099,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
     clearTimeout(resetTimer); resetArmed = false;
     archiveCurrent(); S.gid = null;
     S.events = []; S.oppGoals = []; S.oppK = 0; S.timer = defTimer(S.timer.len); sel = null; pos = null;
+    askKeepRoster();
     save(); render(); say('Neues Spiel bereit.');
   };
 
