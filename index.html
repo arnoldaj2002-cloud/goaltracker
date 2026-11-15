@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0c6b4f"><meta name="application-name" content="GoalTracker"><meta name="version" content="1.1.0"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GoalTracker"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0c6b4f"><meta name="application-name" content="GoalTracker"><meta name="version" content="1.2.0"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GoalTracker"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Torzähler Handball</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
@@ -70,7 +70,11 @@ h2:first-child { margin-top: 12px; }
 .wp b { display: block; font-family: var(--font-display); font-size: 26px; line-height: 1; }
 .wp span { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .wtitle { text-align: center; font-weight: 600; font-size: 15px; color: var(--fg); margin: 8px 0 0; }
-.watch .nmcol, .watch .log button { display: none; }
+.watch .log button { display: none; }
+.wp em { display: block; font-style: normal; font-size: 12px; overflow-wrap: anywhere; line-height: 1.2; }
+.pn { display: block; font-size: 11px; font-weight: 500; color: var(--muted); line-height: 1.1; overflow-wrap: anywhere; }
+.chk { display: flex; align-items: center; gap: 10px; font-size: 15px; min-height: 44px; }
+.chk input { width: 22px; height: 22px; }
 .watch #dl { display: none !important; }
 .zlab { fill: var(--fg); font: 600 10px var(--font-body); text-anchor: middle; }
 .zcnt { fill: var(--fg); font: 700 14px var(--font-display); text-anchor: middle; }
@@ -228,6 +232,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
     <button class="big goal" id="btnToGame">Zum Spiel</button>
     <h2>Live-Übertragung</h2>
     <p class="sub" id="liveInfo" style="margin:0"></p>
+    <label class="chk" for="liveNames"><input type="checkbox" id="liveNames" checked> Vornamen der Spieler für Zuschauer anzeigen</label>
     <button class="big goal" id="liveStart">Live-Übertragung starten</button>
     <div class="oppbox" id="liveBox" hidden>
       <label class="sr" for="liveLink">Link für Zuschauer</label>
@@ -292,7 +297,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
   var POS = [['L','Links'],['HL','Halblinks'],['M','Mitte'],['HR','Halbrechts'],['R','Rechts']];
   var POSNAME = {L:'Links',HL:'Halblinks',M:'Mitte',HR:'Halbrechts',R:'Rechts'};
   var KEY = 'torzaehler-v1';
-  var VERSION = '1.1.0', VERSION_DATE = '15.11.2026';
+  var VERSION = '1.2.0', VERSION_DATE = '15.11.2026';
   var FB_CONFIG = {"apiKey":"AIzaSyCfTNJIWwUvcZCbFzW39auRzkgU_9MoGVY","authDomain":"goaltracker-b0bd2.firebaseapp.com","databaseURL":"https://goaltracker-b0bd2-default-rtdb.europe-west1.firebasedatabase.app","projectId":"goaltracker-b0bd2","storageBucket":"goaltracker-b0bd2.firebasestorage.app","messagingSenderId":"466673267446","appId":"1:466673267446:web:512afb5f483f9a7a2f72d7"};
   document.getElementById('ver').textContent = 'GoalTracker · Version ' + VERSION + ' · ' + VERSION_DATE;
   var $ = function (id) { return document.getElementById(id); };
@@ -627,12 +632,24 @@ tr.total td { font-weight: 700; background: var(--bg); }
   }
   function genId() { var c = 'abcdefghjkmnpqrstuvwxyz23456789', s = ''; for (var i = 0; i < 8; i++) s += c.charAt(Math.floor(Math.random() * c.length)); return s; }
   function liveUrl() { return location.href.split('#')[0].split('?')[0] + '?z=' + S.live.id; }
+  function liveNameMap() {
+    var o = { H: {}, G: {} };
+    if (S.liveNames === false) return o;
+    ['H', 'G'].forEach(function (t) { Object.keys(S.names[t] || {}).forEach(function (n) { if (S.names[t][n]) o[t]['n' + n] = S.names[t][n]; }); });
+    return o;
+  }
+  function readNames(src) {
+    var o = { H: {}, G: {} };
+    ['H', 'G'].forEach(function (t) { var m = (src && src[t]) || {}; Object.keys(m).forEach(function (k) { var n = parseInt(k.slice(1), 10); if (!isNaN(n) && typeof m[k] === 'string') o[t][n] = m[k]; }); });
+    return o;
+  }
   function snapshot(offset) {
     var T = S.timer;
     return {
       events: S.events.map(function (e) { return { id: e.id, team: e.team, num: e.num, res: e.res, pos: e.pos || '', half: e.half || 1, t: e.t || 0 }; }),
       oppGoals: (S.oppGoals || []).map(function (g) { return { id: g.id, half: g.half || 1, t: g.t || 0 }; }),
       roster: { H: S.roster.H, G: S.roster.G },
+      names: liveNameMap(),
       teamNames: { H: TN('H'), G: TN('G') },
       mult: !!S.mult, opp: S.opp || '', oppK: S.oppK || 0,
       timer: { len: T.len, half: T.half, phase: T.phase, elapsed: T.elapsed, startedAt: T.phase === 'running' ? T.startedAt + (offset || 0) : 0, alarm: !!T.alarm }
@@ -641,7 +658,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
   function normalize(v) {
     v = v || {}; var T = v.timer || {}, r = v.roster || {};
     return {
-      team: viewTeam, roster: { H: arr(r.H), G: arr(r.G) }, names: { H: {}, G: {} },
+      team: viewTeam, roster: { H: arr(r.H), G: arr(r.G) }, names: readNames(v.names),
       teamNames: v.teamNames || { H: 'Heim', G: 'Gast' },
       events: arr(v.events).map(function (e) { return { id: e.id, team: e.team, num: e.num, res: e.res, pos: e.pos || null, half: e.half, t: e.t }; }),
       oppGoals: arr(v.oppGoals), mult: v.mult !== false, opp: v.opp === undefined ? '' : v.opp, oppK: v.oppK || 0,
@@ -764,11 +781,11 @@ tr.total td { font-weight: 700; background: var(--bg); }
     var list = Object.keys(nums).map(Number).sort(function (a, b) { return a - b; });
     $('wplayers').innerHTML = isOpp ? '<p class="empty" style="grid-column:1/-1">Gegner: nur Tore gezählt, ' + res(t).g + ' Tore.</p>' : (list.length ? list.map(function (n) {
       var pe = te.filter(function (e) { return e.num === n; });
-      return '<div class="wp"><b>' + n + '</b><span>' + cnt(pe, isTor) + ' / ' + pe.length + '</span></div>';
+      return '<div class="wp"><b>' + n + '</b>' + (nm(t, n) ? '<em>' + esc(nm(t, n)) + '</em>' : '') + '<span>' + cnt(pe, isTor) + ' / ' + pe.length + '</span></div>';
     }).join('') : '<p class="empty" style="grid-column:1/-1">Noch keine Spieler.</p>');
     var recent = allEvents().reverse().slice(0, 12);
     $('wlog').innerHTML = recent.length ? recent.map(function (e) {
-      return '<li><span class="n">' + (e.num === null ? '–' : e.num) + '</span><span class="r"><span class="tag ' + (e.res === 'tor' ? 't' : 'f') + '">' + (e.res === 'tor' ? 'Tor' : 'Fehlwurf') + '</span> <span class="sub">· ' + (e.num === null ? 'Gegner' : e.pos ? POSNAME[e.pos] : 'ohne Position') + ' · ' + esc(TN(e.team)) + (e.t !== undefined ? ' · ' + e.half + '. HZ ' + fmt(e.t) : '') + '</span></span></li>';
+      return '<li><span class="n">' + (e.num === null ? '–' : e.num) + (e.num !== null && nm(e.team, e.num) ? '<small class="pn">' + esc(nm(e.team, e.num)) + '</small>' : '') + '</span><span class="r"><span class="tag ' + (e.res === 'tor' ? 't' : 'f') + '">' + (e.res === 'tor' ? 'Tor' : 'Fehlwurf') + '</span> <span class="sub">· ' + (e.num === null ? 'Gegner' : e.pos ? POSNAME[e.pos] : 'ohne Position') + ' · ' + esc(TN(e.team)) + (e.t !== undefined ? ' · ' + e.half + '. HZ ' + fmt(e.t) : '') + '</span></span></li>';
     }).join('') : '<li class="sub">Noch keine Würfe.</li>';
   }
   function renderExtras() {
@@ -778,7 +795,8 @@ tr.total td { font-weight: 700; background: var(--bg); }
     if (!watching) {
       $('liveStart').hidden = on; $('liveStart').disabled = !cfg;
       $('liveBox').hidden = !on;
-      $('liveInfo').textContent = !cfg ? 'Noch nicht eingerichtet.' : 'Zuschauer verfolgen das Spiel live auf ihrem Handy. Es werden nur Nummern übertragen, keine Namen.';
+      $('liveNames').checked = S.liveNames !== false;
+      $('liveInfo').textContent = !cfg ? 'Noch nicht eingerichtet.' : 'Zuschauer verfolgen das Spiel live auf ihrem Handy.';
       if (on) { $('liveLink').value = liveUrl(); $('liveStop').textContent = liveStopArmed ? 'Wirklich beenden?' : 'Live beenden und Spiel aus der Liste entfernen'; }
       $('liveBadge').hidden = !on;
       if (on) $('liveBadge').textContent = '● Live · ' + (liveSent ? 'gesendet ' + liveSent : 'verbinde …');
@@ -802,6 +820,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
   $('wteamH').onclick = function () { viewTeam = 'H'; S.team = 'H'; render(); };
   $('wteamG').onclick = function () { viewTeam = 'G'; S.team = 'G'; render(); };
   $('liveStart').onclick = startLive;
+  $('liveNames').onchange = function () { S.liveNames = $('liveNames').checked; save(); };
   $('liveCopy').onclick = function () {
     var el = $('liveLink');
     try { navigator.clipboard.writeText(el.value).then(function () { $('liveMsg').style.color = 'var(--muted)'; $('liveMsg').textContent = 'Link kopiert.'; }, function () { el.select(); }); } catch (e) { el.select(); }
