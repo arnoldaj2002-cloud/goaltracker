@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0c6b4f"><meta name="application-name" content="GoalTracker"><meta name="version" content="1.0.2"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GoalTracker"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0c6b4f"><meta name="application-name" content="GoalTracker"><meta name="version" content="1.0.3"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GoalTracker"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Torzähler Handball</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
@@ -90,7 +90,11 @@ h2:first-child { margin-top: 12px; }
 .help .tip { background: var(--bg); border-radius: 8px; padding: 8px 10px; font-size: 14px; color: var(--muted); }
 .sr { position: absolute; left: -9999px; }
 
-.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; padding-block: 8px; }
+.hdr { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); }
+.modebar { margin-top: 8px; padding: 7px 10px; border-radius: 10px; text-align: center; font-weight: 700; font-size: 14px; letter-spacing: .02em; background: var(--accent); color: var(--accent-fg, #fff); }
+.modebar.w { background: var(--miss); color: var(--miss-fg, #fff); }
+.modebar.a { background: var(--muted); color: var(--bg); }
+.tabs { background: var(--bg); display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; padding-block: 8px; }
 .tabs button { min-height: 44px; font-weight: 600; font-size: 15px; padding: 0 4px; }
 .tabs button[aria-selected="true"] { background: var(--sel); color: var(--sel-fg); border-color: var(--sel); }
 
@@ -169,13 +173,14 @@ tr.total td { font-weight: 700; background: var(--bg); }
 </style>
 
 <main>
+  <div class="hdr"><div class="modebar" id="modebar" hidden></div>
   <nav class="tabs" aria-label="Ansicht">
     <button data-v="setup">Einrichtung</button>
     <button data-v="game">Spiel</button>
     <button data-v="watch">Spielstand</button>
     <button data-v="report">Auswertung</button>
     <button data-v="list">Spiele</button>
-  </nav>
+  </nav></div>
 
   <!-- Anleitung -->
   <section class="view help" id="v-help" hidden>
@@ -436,7 +441,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
   var POS = [['L','Links'],['HL','Halblinks'],['M','Mitte'],['HR','Halbrechts'],['R','Rechts']];
   var POSNAME = {L:'Links',HL:'Halblinks',M:'Mitte',HR:'Halbrechts',R:'Rechts'};
   var KEY = 'torzaehler-v1';
-  var VERSION = '1.0.2', VERSION_DATE = '15.11.2026';
+  var VERSION = '1.0.3', VERSION_DATE = '15.11.2026';
   var FB_CONFIG = {"apiKey":"AIzaSyCfTNJIWwUvcZCbFzW39auRzkgU_9MoGVY","authDomain":"goaltracker-b0bd2.firebaseapp.com","databaseURL":"https://goaltracker-b0bd2-default-rtdb.europe-west1.firebasedatabase.app","projectId":"goaltracker-b0bd2","storageBucket":"goaltracker-b0bd2.firebasestorage.app","messagingSenderId":"466673267446","appId":"1:466673267446:web:512afb5f483f9a7a2f72d7"};
   document.getElementById('ver').textContent = 'GoalTracker · Version ' + VERSION + ' · ' + VERSION_DATE;
   var $ = function (id) { return document.getElementById(id); };
@@ -582,6 +587,10 @@ tr.total td { font-weight: 700; background: var(--bg); }
     var tabsFor = (view === 'home' || view === 'list' || view === 'archive' || view === 'help' || archived) ? [] : (watching ? ['watch', 'report', 'list'] : ['setup', 'game', 'report']);
     Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function (b) { b.hidden = tabsFor.indexOf(b.dataset.v) < 0; b.setAttribute('aria-selected', b.dataset.v === view); });
     document.querySelector('.tabs').hidden = !tabsFor.length;
+    var mb = $('modebar'), inMode = ['setup', 'game', 'report', 'watch'].indexOf(view) >= 0;
+    mb.hidden = !inMode;
+    mb.className = 'modebar' + (archived ? ' a' : watching ? ' w' : '');
+    mb.textContent = archived ? 'GESPEICHERTES SPIEL · nur ansehen' : watching ? '👁 ZUSCHAUER-MODUS · nur ansehen' : '✎ ZÄHLER-MODUS · du schreibst mit';
 
     var sc = { H: 0, G: 0 };
     S.events.forEach(function (e) { if (isTor(e)) sc[e.team]++; });
