@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0c6b4f"><meta name="application-name" content="GoalTracker"><meta name="version" content="1.2.2"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GoalTracker"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0c6b4f"><meta name="application-name" content="GoalTracker"><meta name="version" content="1.3.0"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GoalTracker"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Torzähler Handball</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
@@ -79,6 +79,9 @@ h2:first-child { margin-top: 12px; }
 .zlab { fill: var(--fg); font: 600 10px var(--font-body); text-anchor: middle; }
 .zcnt { fill: var(--fg); font: 700 14px var(--font-display); text-anchor: middle; }
 .zfill { fill: var(--accent); stroke: var(--surface); stroke-width: 1.5; }
+.aitem { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: stretch; }
+.adel { padding: 0 12px; font-size: 14px; max-width: 120px; }
+.archived .log button { display: none; }
 .sr { position: absolute; left: -9999px; }
 
 .tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; padding-block: 8px; }
@@ -168,12 +171,20 @@ tr.total td { font-weight: 700; background: var(--bg); }
     <button data-v="list">Spiele</button>
   </nav>
 
+  <!-- Meine Spiele -->
+  <section class="view" id="v-archive" hidden>
+    <h2>Meine Spiele</h2>
+    <div class="glist" id="archList"></div>
+    <button id="archHome">Zur Startseite</button>
+  </section>
+
   <!-- Startseite -->
   <section class="view" id="v-home" hidden>
     <h1 class="brand">GoalTracker</h1>
     <p class="sub" style="margin:0 0 8px;text-align:center">Torzähler für Jugend-Handball</p>
     <button class="big goal" id="goAdmin">Spiel anlegen und mitzählen</button>
     <button class="big" id="goWatch">Spiele live ansehen</button>
+    <button class="big" id="goArchive">Meine Spiele</button>
     <p class="sub" id="liveNote" style="text-align:center"></p>
   </section>
 
@@ -241,8 +252,9 @@ tr.total td { font-weight: 700; background: var(--bg); }
       <button class="danger" id="liveStop">Live beenden und Spiel aus der Liste entfernen</button>
     </div>
     <p class="sub" id="liveMsg" style="margin:0;color:var(--miss)"></p>
+    <button id="btnArch">Meine Spiele</button>
     <button id="btnHome">Zur Startseite</button>
-    <button class="danger" id="btnReset">Neues Spiel (Würfe und Uhr zurücksetzen)</button>
+    <button class="danger" id="btnReset">Neues Spiel beginnen (aktuelles wird gespeichert)</button>
   </section>
 
   <!-- Spiel -->
@@ -278,6 +290,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
 
   <!-- Auswertung -->
   <section class="view rep" id="v-report" hidden>
+    <button id="archBack" hidden>← Zurück zu Meine Spiele</button>
     <h2 id="reportTitle">Gesamtauswertung</h2>
     <div id="report"></div>
     <div class="row2" id="dl" hidden>
@@ -297,7 +310,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
   var POS = [['L','Links'],['HL','Halblinks'],['M','Mitte'],['HR','Halbrechts'],['R','Rechts']];
   var POSNAME = {L:'Links',HL:'Halblinks',M:'Mitte',HR:'Halbrechts',R:'Rechts'};
   var KEY = 'torzaehler-v1';
-  var VERSION = '1.2.2', VERSION_DATE = '15.11.2026';
+  var VERSION = '1.3.0', VERSION_DATE = '15.11.2026';
   var FB_CONFIG = {"apiKey":"AIzaSyCfTNJIWwUvcZCbFzW39auRzkgU_9MoGVY","authDomain":"goaltracker-b0bd2.firebaseapp.com","databaseURL":"https://goaltracker-b0bd2-default-rtdb.europe-west1.firebasedatabase.app","projectId":"goaltracker-b0bd2","storageBucket":"goaltracker-b0bd2.firebasestorage.app","messagingSenderId":"466673267446","appId":"1:466673267446:web:512afb5f483f9a7a2f72d7"};
   document.getElementById('ver').textContent = 'GoalTracker · Version ' + VERSION + ' · ' + VERSION_DATE;
   var $ = function (id) { return document.getElementById(id); };
@@ -318,7 +331,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
   function save() { if (watching) return; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} schedulePublish(); }
 
   var view = (S.roster.H.length || S.roster.G.length || S.events.length || (S.live && S.live.on)) ? 'game' : 'home';
-  var watching = false, watchId = null, ADMIN = null;
+  var watching = false, watchId = null, ADMIN = null, archived = false;
   var sel = null, pos = null, resetArmed = false, resetTimer = null, stopArmed = false, stopTimer = null, wl = null;
 
   function TN(t) { return S.teamNames[t] || (t === 'H' ? 'Heim' : 'Gast'); }
@@ -437,9 +450,10 @@ tr.total td { font-weight: 700; background: var(--bg); }
   function render() { renderCore(); renderExtras(); }
   function renderCore() {
     var t = S.team;
-    ['home', 'setup', 'game', 'report', 'list', 'watch'].forEach(function (v) { $('v-' + v).hidden = view !== v; });
-    document.body.classList.toggle('watch', watching);
-    var tabsFor = (view === 'home' || view === 'list') ? [] : (watching ? ['watch', 'report', 'list'] : ['setup', 'game', 'report']);
+    ['home', 'setup', 'game', 'report', 'list', 'watch', 'archive'].forEach(function (v) { $('v-' + v).hidden = view !== v; });
+    document.body.classList.toggle('watch', watching && !archived);
+    document.body.classList.toggle('archived', archived);
+    var tabsFor = (view === 'home' || view === 'list' || view === 'archive' || archived) ? [] : (watching ? ['watch', 'report', 'list'] : ['setup', 'game', 'report']);
     Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function (b) { b.hidden = tabsFor.indexOf(b.dataset.v) < 0; b.setAttribute('aria-selected', b.dataset.v === view); });
     document.querySelector('.tabs').hidden = !tabsFor.length;
 
@@ -474,7 +488,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
     $('kader').innerHTML = roster.length ? roster.map(function (n) {
       return '<div class="krow"><b>' + n + '</b><input data-nm="' + n + '" value="' + esc(nm(t, n)) + '" placeholder="Name" maxlength="40" aria-label="Name zu Nr. ' + n + '"><button data-rm="' + n + '">Entfernen</button></div>';
     }).join('') : '<p class="empty">Noch kein Kader für ' + esc(TN(t)) + '. Oben Nummer und Name eintragen.</p>';
-    $('btnReset').textContent = resetArmed ? 'Wirklich alle Würfe löschen?' : 'Neues Spiel (Würfe und Uhr zurücksetzen)';
+    $('btnReset').textContent = resetArmed ? 'Wirklich neues Spiel beginnen?' : 'Neues Spiel beginnen (aktuelles wird gespeichert)';
 
     renderTimer();
     renderReport();
@@ -586,7 +600,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
     }
     clearTimeout(stopTimer); stopArmed = false;
     if (T.half === 1) { T.half = 2; T.elapsed = 0; T.phase = 'ready'; T.alarm = false; say('1. Halbzeit beendet. Die 2. Halbzeit startest du mit dem Start-Button.'); }
-    else { T.elapsed = elapsed(); T.phase = 'finished'; say('Spiel beendet. Die Auswertung findest du im Reiter Auswertung.'); }
+    else { T.elapsed = elapsed(); T.phase = 'finished'; say('Spiel beendet. Die Auswertung findest du im Reiter Auswertung.'); archiveCurrent(); }
     save(); render();
   };
   setInterval(function () {
@@ -790,6 +804,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
   }
   function renderExtras() {
     var cfg = !!FB_CONFIG, on = !!(S.live && S.live.on) && !watching;
+    $('archBack').hidden = !archived;
     $('liveNote').textContent = cfg ? '' : 'Live-Ansicht ist noch nicht eingerichtet.';
     $('goWatch').disabled = !cfg;
     if (!watching) {
@@ -802,8 +817,75 @@ tr.total td { font-weight: 700; background: var(--bg); }
       if (on) $('liveBadge').textContent = '● Live · ' + (liveSent ? 'gesendet ' + liveSent : 'verbinde …');
     }
     if (watching) renderWatch();
+    if (view === 'archive') renderArchive();
     if (view === 'list') renderList();
   }
+  /* ===== Meine Spiele (Archiv auf diesem Gerät) ===== */
+  var ARCH_KEY = 'torzaehler-archiv-v1', archArm = null, archTimer = null;
+  function loadArch() { try { var a = JSON.parse(localStorage.getItem(ARCH_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+  function saveArch(a) { try { localStorage.setItem(ARCH_KEY, JSON.stringify(a)); } catch (e) {} }
+  function archiveCurrent() {
+    if (watching || !(S.events.length || (S.oppGoals || []).length)) return;
+    if (S.skipArch && S.skipArch === S.gid) return;
+    if (!S.gid) S.gid = genId();
+    var st = JSON.parse(JSON.stringify(S));
+    delete st.live;
+    if (st.timer.phase === 'running') { st.timer.elapsed = elapsed(); st.timer.phase = 'paused'; }
+    var a = loadArch().filter(function (x) { return x.id !== S.gid; });
+    a.push({ id: S.gid, savedAt: Date.now(), state: st });
+    a.sort(function (x, y) { return y.savedAt - x.savedAt; });
+    saveArch(a); save();
+  }
+  function calcArch(st) {
+    var out = {};
+    ['H', 'G'].forEach(function (t) {
+      var ev = st.events.filter(function (e) { return e.team === t && e.res === 'tor'; });
+      var g = ev.length + (t === st.opp ? (st.oppGoals || []).length : 0), seen = {};
+      ev.forEach(function (e) { if (e.num !== null) seen[e.num] = 1; });
+      var k = Object.keys(seen).length;
+      if (t === st.opp) { k = Math.min(g, k + (st.oppK || 0)); if (g > 0 && k < 1) k = 1; }
+      out[t] = { g: g, k: k, m: g * k };
+    });
+    return out;
+  }
+  function renderArchive() {
+    var a = loadArch();
+    $('archList').innerHTML = a.length ? a.map(function (x) {
+      var st = x.state, r = calcArch(st), d = new Date(x.savedAt), p2 = function (n) { return ('0' + n).slice(-2); };
+      var date = p2(d.getDate()) + '.' + p2(d.getMonth() + 1) + '.' + d.getFullYear() + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+      var tn = st.teamNames || { H: 'Heim', G: 'Gast' };
+      var main = st.mult ? r.H.m + ' : ' + r.G.m : r.H.g + ' : ' + r.G.g;
+      var other = st.mult ? 'ohne Mult.: ' + r.H.g + ' : ' + r.G.g : 'mit Mult.: ' + r.H.m + ' : ' + r.G.m;
+      return '<div class="aitem"><button class="gitem" data-a="' + esc(x.id) + '"><span class="gt">' + esc(tn.H) + ' – ' + esc(tn.G) + '</span><span class="gs">' + main + '</span><span class="sub">' + date + ' · ' + other + '</span></button>' +
+        '<button class="danger adel" data-ad="' + esc(x.id) + '">' + (archArm === x.id ? 'Wirklich löschen?' : 'Löschen') + '</button></div>';
+    }).join('') : '<p class="empty">Noch keine Spiele gespeichert. Ein Spiel wird automatisch gespeichert, wenn du es beendest oder ein neues Spiel beginnst.</p>';
+  }
+  function openArchiveList() { archArm = null; view = 'archive'; render(); window.scrollTo(0, 0); }
+  function openArchived(id) {
+    var x = loadArch().filter(function (y) { return y.id === id; })[0];
+    if (!x) return;
+    if (!watching) ADMIN = S;
+    watching = true; archived = true;
+    S = JSON.parse(JSON.stringify(x.state)); S.team = 'H'; S.live = null;
+    view = 'report'; render(); window.scrollTo(0, 0);
+  }
+  $('goArchive').onclick = openArchiveList;
+  $('btnArch').onclick = openArchiveList;
+  $('archHome').onclick = function () { view = 'home'; render(); };
+  $('archBack').onclick = function () { watching = false; archived = false; S = ADMIN || S; openArchiveList(); };
+  $('archList').onclick = function (e) {
+    var d = e.target.closest('[data-ad]');
+    if (d) {
+      var id = d.dataset.ad;
+      if (archArm !== id) { archArm = id; clearTimeout(archTimer); archTimer = setTimeout(function () { archArm = null; renderArchive(); }, 4000); renderArchive(); return; }
+      clearTimeout(archTimer); archArm = null;
+      saveArch(loadArch().filter(function (x) { return x.id !== id; }));
+      if (S.gid === id) { S.skipArch = id; save(); }
+      renderArchive(); return;
+    }
+    var b = e.target.closest('[data-a]'); if (b) openArchived(b.dataset.a);
+  };
+
   /* Schutz vor versehentlichem Schließen: Der Browser fragt nach, solange ein Spiel läuft */
   function gameActive() {
     if (watching) return false;
@@ -859,6 +941,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
       return;
     }
     clearTimeout(resetTimer); resetArmed = false;
+    archiveCurrent(); S.gid = null;
     S.events = []; S.oppGoals = []; S.oppK = 0; S.timer = defTimer(S.timer.len); sel = null; pos = null;
     save(); render(); say('Neues Spiel bereit.');
   };
