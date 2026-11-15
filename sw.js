@@ -1,5 +1,5 @@
-// GoalTracker 1.0.7 - Offline-Zwischenspeicher
-var CACHE = 'goaltracker-1.0.7';
+// GoalTracker 1.0.8 - Offline-Zwischenspeicher
+var CACHE = 'goaltracker-1.0.8';
 var FILES = ["./","index.html","manifest.webmanifest","icon-192.png","icon-512.png","apple-touch-icon.png","lib/jspdf.plugin.autotable.min.js","lib/jspdf.umd.min.js","lib/xlsx.full.min.js"];
 self.addEventListener('install', function (e) { e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES); }).then(function () { return self.skipWaiting(); })); });
 self.addEventListener('activate', function (e) {
