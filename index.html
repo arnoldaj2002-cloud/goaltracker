@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0c6b4f"><meta name="application-name" content="GoalTracker"><meta name="version" content="1.0.5"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GoalTracker"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0c6b4f"><meta name="application-name" content="GoalTracker"><meta name="version" content="1.0.6"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GoalTracker"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Torzähler Handball</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
@@ -70,7 +70,7 @@ h2:first-child { margin-top: 12px; }
 .wp b { display: block; font-family: var(--font-display); font-size: 26px; line-height: 1; }
 .wp span { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .wtitle { text-align: center; font-weight: 600; font-size: 15px; color: var(--fg); margin: 8px 0 0; }
-.watch .log button { display: none; }
+.watch .log button, .watch #evAdd, .archived #evAdd { display: none; }
 .wp em { display: block; font-style: normal; font-size: 12px; overflow-wrap: anywhere; line-height: 1.2; }
 .pn { display: block; font-size: 11px; font-weight: 500; color: var(--muted); line-height: 1.1; overflow-wrap: anywhere; }
 .chk { display: flex; align-items: center; gap: 10px; font-size: 15px; min-height: 44px; }
@@ -136,7 +136,7 @@ h2:first-child { margin-top: 12px; }
 
 /* Einrichtung */
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-input.txt, .add input { height: 48px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); padding: 0 12px; font: 500 17px var(--font-body); min-width: 0; width: 100%; }
+input.txt, select.txt, .add input { height: 48px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); padding: 0 12px; font: 500 17px var(--font-body); min-width: 0; width: 100%; }
 .len { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .len input { width: 80px; text-align: center; font: 600 22px var(--font-display); }
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -169,6 +169,9 @@ tr.total td { font-weight: 700; background: var(--bg); }
 .tag { font-weight: 600; }
 .tag.t { color: var(--accent); }
 .tag.f { color: var(--miss); }
+#evForm { display: grid; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px; margin: 8px 0; }
+#evForm label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+#evAddBtn { width: 100%; }
 .log button { min-height: 40px; padding: 0 12px; font-size: 14px; }
 </style>
 
@@ -216,7 +219,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
         <li><b>Nummer</b> antippen. Die gewählte Nummer wird dunkel. Nochmal tippen hebt die Auswahl auf.</li>
         <li><b>Wurfposition</b> (kann man weglassen): die Stelle auf dem Spielfeld antippen, von der geworfen wurde. Blick aufs Tor: Links, Halblinks, Mitte, Halbrechts, Rechts. Die Linien zeigen 6 m, 7 m und die gestrichelte 9-m-Linie.</li>
         <li><b>Tor</b> oder <b>Fehlwurf</b> tippen. Die Nummer bleibt ausgewählt, die Position wird zurückgesetzt.</li>
-        <li><b>Vertippt?</b> „Letzten Wurf zurücknehmen“ unter den Tasten. Ältere Einträge löschst du im Reiter „Auswertung“ unter „Verlauf“.</li>
+        <li><b>Vertippt?</b> „Letzten Wurf zurücknehmen“ unter den Tasten. Ältere Einträge änderst oder löschst du im Reiter „Auswertung“ unter „Verlauf“. Dort kannst du auch nach Spielende Würfe korrigieren oder mit „+ Wurf nachtragen“ ergänzen.</li>
       </ul>
     </details>
 
@@ -431,6 +434,20 @@ tr.total td { font-weight: 700; background: var(--bg); }
     <button id="btnCopy">Ergebnis als Text kopieren</button>
     <p class="status" id="status2" aria-live="polite"></p>
     <h2>Verlauf</h2>
+    <div id="evAdd">
+      <button id="evAddBtn">+ Wurf nachtragen</button>
+      <form id="evForm" hidden>
+        <strong id="evTitle">Wurf nachtragen</strong>
+        <label>Mannschaft<select class="txt" id="evTeam"></select></label>
+        <div id="evPlayer" style="display:grid;gap:8px">
+          <label>Spieler-Nr.<select class="txt" id="evNum"></select></label>
+          <label>Ergebnis<select class="txt" id="evRes"><option value="tor">Tor</option><option value="fehl">Fehlwurf</option></select></label>
+          <label>Position<select class="txt" id="evPos"><option value="">ohne Position</option></select></label>
+        </div>
+        <label>Halbzeit<select class="txt" id="evHalf"><option value="1">1. Halbzeit</option><option value="2">2. Halbzeit</option></select></label>
+        <div class="row2"><button type="submit" class="goal">Speichern</button><button type="button" id="evCancel">Abbrechen</button></div>
+      </form>
+    </div>
     <ul class="log" id="log"></ul>
   </section>
 <p class="ver" id="ver"></p>
@@ -441,7 +458,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
   var POS = [['L','Links'],['HL','Halblinks'],['M','Mitte'],['HR','Halbrechts'],['R','Rechts']];
   var POSNAME = {L:'Links',HL:'Halblinks',M:'Mitte',HR:'Halbrechts',R:'Rechts'};
   var KEY = 'torzaehler-v1';
-  var VERSION = '1.0.5', VERSION_DATE = '15.11.2026';
+  var VERSION = '1.0.6', VERSION_DATE = '15.11.2026';
   var FB_CONFIG = {"apiKey":"AIzaSyCfTNJIWwUvcZCbFzW39auRzkgU_9MoGVY","authDomain":"goaltracker-b0bd2.firebaseapp.com","databaseURL":"https://goaltracker-b0bd2-default-rtdb.europe-west1.firebasedatabase.app","projectId":"goaltracker-b0bd2","storageBucket":"goaltracker-b0bd2.firebasestorage.app","messagingSenderId":"466673267446","appId":"1:466673267446:web:512afb5f483f9a7a2f72d7"};
   document.getElementById('ver').textContent = 'GoalTracker · Version ' + VERSION + ' · ' + VERSION_DATE;
   var $ = function (id) { return document.getElementById(id); };
@@ -570,11 +587,11 @@ tr.total td { font-weight: 700; background: var(--bg); }
       return '<h3><span>' + esc(TN(t)) + '</span><span>' + res(t).g + ' Tore · ×' + res(t).k + ' = ' + res(t).m + '</span></h3><div class="tablewrap"><table>' + head + '<tbody>' + rows + '</tbody></table></div>';
     }).join('');
     $('report').innerHTML = html ? summaryHtml() + html : '<p class="empty">Noch keine Daten. Die Auswertung füllt sich beim Zählen.</p>';
-    var recent = allEvents().reverse().slice(0, 40);
+    var recent = allEvents().reverse().slice(0, 200);
     $('log').innerHTML = recent.length ? recent.map(function (e) {
       return '<li><span class="n">' + (e.num === null ? '–' : e.num) + '</span><span class="r"><span class="tag ' + (e.res === 'tor' ? 't' : 'f') + '">' + (e.res === 'tor' ? 'Tor' : 'Fehlwurf') +
         '</span> <span class="sub">· ' + (e.num === null ? 'Gegner' : e.pos ? POSNAME[e.pos] : 'ohne Position') + ' · ' + esc(TN(e.team)) + (e.t !== undefined ? ' · ' + e.half + '. HZ ' + fmt(e.t) : '') + '</span></span>' +
-        '<button data-del="' + e.id + '" aria-label="Eintrag löschen">Löschen</button></li>';
+        '<button data-edit="' + e.id + '" aria-label="Eintrag ändern">Ändern</button><button data-del="' + e.id + '" aria-label="Eintrag löschen">Löschen</button></li>';
     }).join('') : '<li class="sub">Noch keine Einträge.</li>';
   }
 
@@ -719,13 +736,68 @@ tr.total td { font-weight: 700; background: var(--bg); }
   $('btnMiss').onclick = function () { record('fehl'); };
   $('btnUndo').onclick = function () { if (S.events.length) { S.events.pop(); save(); render(); say('Letzter Wurf zurückgenommen.'); } };
   $('log').onclick = function (e) {
+    var ed = e.target.closest('[data-edit]'); if (ed) { evOpen(parseFloat(ed.dataset.edit)); return; }
     var b = e.target.closest('[data-del]'); if (!b) return;
     var id = parseFloat(b.dataset.del);
     S.events = S.events.filter(function (x) { return x.id !== id; });
     S.oppGoals = S.oppGoals.filter(function (x) { return x.id !== id; });
+    if (S.timer.phase === 'finished') archiveCurrent();
     save(); render();
   };
 
+  /* Würfe nachträglich ändern oder nachtragen (Admin, auch nach Spielende) */
+  var evEditId = null;
+  function evOpp() { return $('evTeam').value === S.opp; }
+  function evSync() {
+    var t = $('evTeam').value, cur = $('evNum').value, ro = S.roster[t].slice().sort(function (a, b) { return a - b; });
+    if (evEditId !== null) { var ee = S.events.filter(function (x) { return x.id === evEditId; })[0]; if (ee && ee.num !== null && ro.indexOf(ee.num) < 0) ro.push(ee.num); }
+    $('evNum').innerHTML = ro.length ? ro.map(function (n) { return '<option value="' + n + '">' + n + (nm(t, n) ? ' · ' + esc(nm(t, n)) : '') + '</option>'; }).join('') : '<option value="">(Kader leer)</option>';
+    if (cur && ro.indexOf(Number(cur)) >= 0) $('evNum').value = cur;
+    $('evPlayer').style.display = evOpp() ? 'none' : 'grid';
+  }
+  function evOpen(id) {
+    evEditId = id;
+    var e = null, og = null;
+    if (id !== null) { e = S.events.filter(function (x) { return x.id === id; })[0] || null; og = S.oppGoals.filter(function (x) { return x.id === id; })[0] || null; }
+    $('evTeam').innerHTML = '<option value="H">' + esc(TN('H')) + '</option><option value="G">' + esc(TN('G')) + '</option>';
+    $('evPos').innerHTML = '<option value="">ohne Position</option>' + POS.map(function (p) { return '<option value="' + p[0] + '">' + p[1] + '</option>'; }).join('');
+    $('evTeam').value = e ? e.team : og ? S.opp : (S.team || 'H');
+    $('evTeam').disabled = id !== null;
+    $('evTitle').textContent = id === null ? 'Wurf nachtragen' : 'Eintrag ändern';
+    evSync();
+    if (e) { $('evNum').value = e.num; $('evRes').value = e.res; $('evPos').value = e.pos || ''; }
+    else { $('evRes').value = 'tor'; $('evPos').value = ''; }
+    $('evHalf').value = String((e || og || { half: S.timer.half }).half || 1);
+    $('evForm').hidden = false; $('evAddBtn').hidden = true;
+    $('evForm').scrollIntoView({ block: 'nearest' });
+  }
+  function evClose() { $('evForm').hidden = true; $('evAddBtn').hidden = false; evEditId = null; }
+  $('evAddBtn').onclick = function () { evOpen(null); };
+  $('evCancel').onclick = evClose;
+  $('evTeam').onchange = evSync;
+  $('evForm').onsubmit = function (ev) {
+    ev.preventDefault();
+    var half = parseInt($('evHalf').value, 10) || 1, t = $('evTeam').value;
+    if (evEditId !== null) {
+      var og = S.oppGoals.filter(function (x) { return x.id === evEditId; })[0];
+      var e = S.events.filter(function (x) { return x.id === evEditId; })[0];
+      if (og) og.half = half;
+      else if (e) {
+        if ($('evNum').value === '') { say('Bitte eine Spielernummer wählen.'); return; }
+        e.num = parseInt($('evNum').value, 10); e.res = $('evRes').value; e.pos = $('evPos').value || null; e.half = half;
+      }
+    } else {
+      var tm = half === S.timer.half ? elapsed() : S.timer.len * 60000, id = Date.now() + Math.random();
+      if (t === S.opp) S.oppGoals.push({ id: id, half: half, t: tm });
+      else {
+        if ($('evNum').value === '') { say('Bitte eine Spielernummer wählen (Kader in der Einrichtung ergänzen).'); return; }
+        S.events.push({ id: id, team: t, num: parseInt($('evNum').value, 10), res: $('evRes').value, pos: $('evPos').value || null, half: half, t: tm });
+      }
+    }
+    evClose();
+    if (S.timer.phase === 'finished') archiveCurrent();
+    save(); render(); say('Gespeichert.');
+  };
   function askKeepRoster() {
     if (!S.roster.H.length && !S.roster.G.length) return;
     var keep = true;
@@ -773,6 +845,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
   }, 250);
 
   /* ===== Live-Übertragung und Zuschauer (Firebase Realtime Database) ===== */
+  var LIVE_KEEP = 172800000; /* Zuschauer sehen ein Spiel 48 h nach der letzten Änderung */
   var FB = null, fbWait = null, listUnsub = null, gameUnsub = null, LIST = [], pubTimer = null, liveStopArmed = false, liveStopTimer = null, viewTeam = 'H', meta = null, liveSent = '';
   var COURT_LINES = '<line class="c-line" x1="0" y1="10" x2="300" y2="10"/><rect class="c-goal" x="132" y="1" width="36" height="9"/><path class="c-line" d="M60,10 A72,72 0 0 0 132,82 L168,82 A72,72 0 0 0 240,10"/><path class="c-line c-dash" d="M24,10 A108,108 0 0 0 132,118 L168,118 A108,108 0 0 0 276,10"/><line class="c-line" x1="144" y1="94" x2="156" y2="94"/><text class="c-txt" x="150" y="78" text-anchor="middle">6 m</text><text class="c-txt" x="160" y="92">7 m</text><text class="c-txt" x="176" y="115">9 m</text>';
   function arr(x) { if (!x) return []; if (Array.isArray(x)) return x.filter(Boolean); return Object.keys(x).map(function (k) { return x[k]; }); }
@@ -880,14 +953,23 @@ tr.total td { font-weight: 700; background: var(--bg); }
   async function subscribeGame(id) {
     try {
       var f = await fbInit(false), rt = f.rt;
+      var expired = false;
       var u1 = rt.onValue(rt.ref(f.db, 'games/' + id + '/state'), function (s) {
-        if (!watching || watchId !== id) return;
+        if (!watching || watchId !== id || expired) return;
         var v = s.val();
         if (v === null) { $('wstatus').textContent = 'Dieses Spiel gibt es nicht (mehr).'; return; }
         $('wstatus').textContent = '';
         S = normalize(v); S.team = viewTeam; render();
       }, function () { $('wstatus').textContent = 'Keine Verbindung zum Spiel.'; });
-      var u2 = rt.onValue(rt.ref(f.db, 'index/' + id), function (s) { meta = s.val(); if (watching) renderWatch(); });
+      var u2 = rt.onValue(rt.ref(f.db, 'index/' + id), function (s) {
+        meta = s.val();
+        if (meta && typeof meta.updated === 'number' && (Date.now() + f.offset) - meta.updated > LIVE_KEEP) {
+          expired = true; meta = null; S = normalize(null); S.team = viewTeam;
+          if (watching) { renderWatch(); $('wstatus').textContent = 'Dieses Spiel ist nicht mehr abrufbar (älter als 48 Stunden).'; }
+          return;
+        }
+        if (watching) renderWatch();
+      });
       var un = function () { u1(); u2(); };
       if (!watching || watchId !== id) un(); else gameUnsub = un;
     } catch (e) { $('wstatus').textContent = 'Live nicht erreichbar. Bitte Internetverbindung prüfen.'; }
@@ -913,10 +995,10 @@ tr.total td { font-weight: 700; background: var(--bg); }
   function phaseText(v) { return v.phase === 'running' ? v.half + '. Halbzeit · läuft' : v.phase === 'paused' ? v.half + '. Halbzeit · Pause' : v.phase === 'finished' ? 'beendet' : (v.half === 2 ? 'Halbzeitpause' : 'noch nicht gestartet'); }
   function renderList() {
     var q = $('listFilter').value.trim().toLowerCase(), now = Date.now() + (FB ? FB.offset : 0);
-    var rows = LIST.filter(function (v) { return typeof v.updated === 'number' && now - v.updated < 86400000 && (!q || (v.title || '').toLowerCase().indexOf(q) >= 0); });
+    var rows = LIST.filter(function (v) { return typeof v.updated === 'number' && now - v.updated < LIVE_KEEP && (!q || (v.title || '').toLowerCase().indexOf(q) >= 0); });
     $('gameList').innerHTML = rows.length ? rows.map(function (v) {
       return '<button class="gitem" data-g="' + esc(v.id) + '"><span class="gt">' + esc(v.title) + '</span><span class="gs">' + v.sH + ' : ' + v.sG + '</span><span class="sub">' + (v.phase === 'running' ? '<b class="livedot">● LIVE</b> · ' : '') + esc(phaseText(v)) + ' · ' + ago(v.updated) + '</span></button>';
-    }).join('') : '<p class="empty">Keine Spiele in den letzten 24 Stunden' + (q ? ' zu „' + esc(q) + '“' : '') + '.</p>';
+    }).join('') : '<p class="empty">Keine Spiele in den letzten 48 Stunden' + (q ? ' zu „' + esc(q) + '“' : '') + '.</p>';
   }
   function tickWatch() {
     var T = S.timer;
