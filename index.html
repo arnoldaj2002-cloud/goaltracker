@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0c6b4f"><meta name="application-name" content="GoalTracker"><meta name="version" content="1.3.0"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GoalTracker"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0c6b4f"><meta name="application-name" content="GoalTracker"><meta name="version" content="1.4.0"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GoalTracker"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Torzähler Handball</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
@@ -82,6 +82,12 @@ h2:first-child { margin-top: 12px; }
 .aitem { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: stretch; }
 .adel { padding: 0 12px; font-size: 14px; max-width: 120px; }
 .archived .log button { display: none; }
+.help details { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0 14px; }
+.help summary { min-height: 52px; display: flex; align-items: center; font-weight: 600; font-size: 16px; cursor: pointer; }
+.help details[open] summary { border-bottom: 1px solid var(--line); margin-bottom: 10px; }
+.help ol, .help ul { margin: 0 0 12px; padding-left: 22px; display: flex; flex-direction: column; gap: 8px; line-height: 1.4; }
+.help p { margin: 0 0 12px; line-height: 1.45; }
+.help .tip { background: var(--bg); border-radius: 8px; padding: 8px 10px; font-size: 14px; color: var(--muted); }
 .sr { position: absolute; left: -9999px; }
 
 .tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; padding-block: 8px; }
@@ -171,6 +177,121 @@ tr.total td { font-weight: 700; background: var(--bg); }
     <button data-v="list">Spiele</button>
   </nav>
 
+  <!-- Anleitung -->
+  <section class="view help" id="v-help" hidden>
+    <h2>Anleitung</h2>
+    <p class="sub" style="margin:0">So zählst du ein Spiel. Tippe auf ein Thema, um es aufzuklappen.</p>
+
+    <details open>
+      <summary>Schnellstart in 5 Schritten</summary>
+      <ol>
+        <li><b>Einrichtung:</b> Namen der eigenen Mannschaft (Heim) und des Gegners (Gast) eintragen. Halbzeitlänge prüfen.</li>
+        <li><b>Kader:</b> Trikotnummer und Vorname eingeben, auf „Hinzufügen“ tippen. Für jeden Spieler wiederholen.</li>
+        <li><b>Zum Spiel</b> tippen. Mit „Start“ läuft die Uhr.</li>
+        <li><b>Nach jedem Wurf:</b> Nummer antippen, Wurfposition am Spielfeld antippen, dann „Tor“ oder „Fehlwurf“.</li>
+        <li><b>Am Ende:</b> „Stopp“ zweimal tippen. Das Spiel wird gespeichert. Die Auswertung steht im Reiter „Auswertung“.</li>
+      </ol>
+    </details>
+
+    <details>
+      <summary>Einrichtung vor dem Spiel</summary>
+      <ul>
+        <li><b>Mannschaften:</b> „Heim“ ist deine Mannschaft, „Gast“ der Gegner. Beispiel: HB Filderstadt E1-Jungen.</li>
+        <li><b>Halbzeit:</b> Länge in Minuten. Voreingestellt sind 10.</li>
+        <li><b>Wertung:</b> mit oder ohne Multiplikator (siehe unten).</li>
+        <li><b>Gegner:</b> Voreingestellt zählt der Gast nur Tore, ohne Spielernummern. Du kannst auch „Heim“ wählen oder „Beide Mannschaften mit Spielern“.</li>
+        <li><b>Kader:</b> Oben „Heim“ oder „Gast“ wählen. Nummer und Vorname eintragen. Namen lassen sich in der Liste ändern, Spieler können entfernt werden.</li>
+      </ul>
+      <p class="tip">Im Spiel siehst du nur die Nummern. Die Namen erscheinen in Einrichtung und Auswertung.</p>
+    </details>
+
+    <details>
+      <summary>Würfe zählen im Spiel</summary>
+      <ul>
+        <li><b>Nummer</b> antippen. Die gewählte Nummer wird dunkel. Nochmal tippen hebt die Auswahl auf.</li>
+        <li><b>Wurfposition</b> (kann man weglassen): die Stelle auf dem Spielfeld antippen, von der geworfen wurde. Blick aufs Tor: Links, Halblinks, Mitte, Halbrechts, Rechts. Die Linien zeigen 6 m, 7 m und die gestrichelte 9-m-Linie.</li>
+        <li><b>Tor</b> oder <b>Fehlwurf</b> tippen. Die Nummer bleibt ausgewählt, die Position wird zurückgesetzt.</li>
+        <li><b>Vertippt?</b> „Letzten Wurf zurücknehmen“ unter den Tasten. Ältere Einträge löschst du im Reiter „Auswertung“ unter „Verlauf“.</li>
+      </ul>
+    </details>
+
+    <details>
+      <summary>Tore des Gegners zählen</summary>
+      <ul>
+        <li>Oben auf den <b>Stand des Gegners</b> tippen. Dort erscheint die Taste „Tor“ für jedes Gegentor. „Tor zurücknehmen“ macht das letzte rückgängig.</li>
+        <li><b>Verschiedene Torschützen:</b> Wenn du mit Multiplikator wertest, stellst du hier mit + und − ein, wie viele verschiedene Gegner getroffen haben. Sobald ein Tor gefallen ist, zählt mindestens 1.</li>
+        <li>Zurück zu deiner Mannschaft: auf <b>deinen Stand</b> tippen.</li>
+      </ul>
+    </details>
+
+    <details>
+      <summary>Uhr und Halbzeiten</summary>
+      <ul>
+        <li><b>Start</b> startet die Uhr, <b>Pause</b> hält sie an, <b>Weiter</b> setzt sie fort.</li>
+        <li><b>Stopp</b> beendet die Halbzeit. Du musst zweimal tippen, damit es nicht aus Versehen passiert.</li>
+        <li>Nach der 1. Halbzeit erscheint die Taste „2. Halbzeit“.</li>
+        <li>Erreicht die Uhr die eingestellte Länge, hält sie an und das Handy vibriert. Mit „Weiter“ läuft die Nachspielzeit, mit „Stopp“ endet die Halbzeit.</li>
+        <li>„Stopp“ in der 2. Halbzeit beendet das Spiel.</li>
+      </ul>
+    </details>
+
+    <details>
+      <summary>Multiplikator</summary>
+      <p><b>Regel:</b> Die Tore einer Mannschaft werden mit der Anzahl der Spieler multipliziert, die mindestens ein Tor geworfen haben.</p>
+      <p><b>Beispiel:</b> 5 Tore von 3 verschiedenen Spielern ergeben 5 × 3 = 15 Punkte.</p>
+      <p>Beide Ergebnisse (ohne und mit Multiplikator) werden immer angezeigt. In der Einrichtung unter „Wertung“ legst du fest, welches groß gezeigt wird und als gewertet gilt.</p>
+    </details>
+
+    <details>
+      <summary>Auswertung und Berichte</summary>
+      <ul>
+        <li>Reiter <b>Auswertung</b>: Ergebnis mit Sieger, Tabelle pro Spieler (Würfe, Tore, Fehlwürfe, Quote, Tore je Halbzeit und je Position) und der Verlauf aller Würfe.</li>
+        <li><b>Spielbericht als PDF</b> oder <b>als Excel</b> speichern. Danach das Handy fragt, wohin die Datei soll.</li>
+        <li><b>Ergebnis als Text kopieren</b> eignet sich für eine Nachricht.</li>
+      </ul>
+    </details>
+
+    <details>
+      <summary>Live für Zuschauer</summary>
+      <ol>
+        <li>Namen der Heimmannschaft eintragen, zum Beispiel „HB Filderstadt E1-Jungen“.</li>
+        <li>In der Einrichtung unter „Live-Übertragung“ auf <b>Starten</b> tippen.</li>
+        <li><b>Link kopieren</b> oder <b>Teilen</b> und zum Beispiel in die Elterngruppe schicken.</li>
+        <li>Zuschauer öffnen den Link oder wählen „Spiele live ansehen“ und suchen ihr Spiel. Sie sehen Stand, Uhr, Wurfpositionen und den Ticker. Ändern können sie nichts.</li>
+      </ol>
+      <ul>
+        <li>Mit dem Haken <b>Vornamen anzeigen</b> bestimmst du, ob Zuschauer die Vornamen sehen.</li>
+        <li><b>Live beenden</b> nimmt das Spiel aus der Liste.</li>
+        <li>Nur dieses Handy kann das Spiel steuern. Die Browserdaten nicht löschen.</li>
+        <li>Ohne Internet zählst du normal weiter. Sobald wieder Netz da ist, wird alles nachgesendet.</li>
+      </ul>
+    </details>
+
+    <details>
+      <summary>Meine Spiele</summary>
+      <ul>
+        <li>Ein Spiel wird automatisch gespeichert, wenn du es beendest oder ein neues beginnst.</li>
+        <li>Antippen öffnet die Auswertung. Dort gibt es auch PDF und Excel.</li>
+        <li><b>Löschen</b> fragt noch einmal nach.</li>
+        <li><b>Neues Spiel:</b> Einrichtung, ganz unten „Neues Spiel beginnen“. Der Kader bleibt erhalten.</li>
+      </ul>
+      <p class="tip">Gespeicherte Spiele liegen nur auf diesem Handy. Wichtige Spiele zusätzlich als PDF sichern.</p>
+    </details>
+
+    <details>
+      <summary>Gut zu wissen</summary>
+      <ul>
+        <li>Der Spielstand wird laufend im Handy gespeichert. Auch wenn die App zwischendurch zugeht, ist nichts weg und eine laufende Uhr rechnet weiter.</li>
+        <li>Im Spiel bleibt der Bildschirm an, wenn das Handy es erlaubt.</li>
+        <li>Beim Schließen oder Neuladen im Browser fragt die Seite nach, solange ein Spiel läuft.</li>
+        <li><b>Als Kachel ablegen:</b> iPhone: in Safari auf Teilen, dann „Zum Home-Bildschirm“. Android: in Chrome Menü, dann „Zum Startbildschirm hinzufügen“.</li>
+        <li><b>Neue Version:</b> App schließen und neu öffnen. Die Versionsnummer steht ganz unten auf der Seite.</li>
+      </ul>
+    </details>
+
+    <button id="helpBack">Zurück</button>
+  </section>
+
   <!-- Meine Spiele -->
   <section class="view" id="v-archive" hidden>
     <h2>Meine Spiele</h2>
@@ -185,6 +306,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
     <button class="big goal" id="goAdmin">Spiel anlegen und mitzählen</button>
     <button class="big" id="goWatch">Spiele live ansehen</button>
     <button class="big" id="goArchive">Meine Spiele</button>
+    <button id="goHelp">Anleitung</button>
     <p class="sub" id="liveNote" style="text-align:center"></p>
   </section>
 
@@ -253,6 +375,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
     </div>
     <p class="sub" id="liveMsg" style="margin:0;color:var(--miss)"></p>
     <button id="btnArch">Meine Spiele</button>
+    <button id="btnHelp">Anleitung</button>
     <button id="btnHome">Zur Startseite</button>
     <button class="danger" id="btnReset">Neues Spiel beginnen (aktuelles wird gespeichert)</button>
   </section>
@@ -286,6 +409,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
     </div>
     <p class="status" id="status" aria-live="polite"></p>
     <button id="btnUndo">Letzten Wurf zurücknehmen</button>
+    <button id="btnHelpGame">Anleitung</button>
   </section>
 
   <!-- Auswertung -->
@@ -310,7 +434,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
   var POS = [['L','Links'],['HL','Halblinks'],['M','Mitte'],['HR','Halbrechts'],['R','Rechts']];
   var POSNAME = {L:'Links',HL:'Halblinks',M:'Mitte',HR:'Halbrechts',R:'Rechts'};
   var KEY = 'torzaehler-v1';
-  var VERSION = '1.3.0', VERSION_DATE = '15.11.2026';
+  var VERSION = '1.4.0', VERSION_DATE = '15.11.2026';
   var FB_CONFIG = {"apiKey":"AIzaSyCfTNJIWwUvcZCbFzW39auRzkgU_9MoGVY","authDomain":"goaltracker-b0bd2.firebaseapp.com","databaseURL":"https://goaltracker-b0bd2-default-rtdb.europe-west1.firebasedatabase.app","projectId":"goaltracker-b0bd2","storageBucket":"goaltracker-b0bd2.firebasestorage.app","messagingSenderId":"466673267446","appId":"1:466673267446:web:512afb5f483f9a7a2f72d7"};
   document.getElementById('ver').textContent = 'GoalTracker · Version ' + VERSION + ' · ' + VERSION_DATE;
   var $ = function (id) { return document.getElementById(id); };
@@ -450,10 +574,10 @@ tr.total td { font-weight: 700; background: var(--bg); }
   function render() { renderCore(); renderExtras(); }
   function renderCore() {
     var t = S.team;
-    ['home', 'setup', 'game', 'report', 'list', 'watch', 'archive'].forEach(function (v) { $('v-' + v).hidden = view !== v; });
+    ['home', 'setup', 'game', 'report', 'list', 'watch', 'archive', 'help'].forEach(function (v) { $('v-' + v).hidden = view !== v; });
     document.body.classList.toggle('watch', watching && !archived);
     document.body.classList.toggle('archived', archived);
-    var tabsFor = (view === 'home' || view === 'list' || view === 'archive' || archived) ? [] : (watching ? ['watch', 'report', 'list'] : ['setup', 'game', 'report']);
+    var tabsFor = (view === 'home' || view === 'list' || view === 'archive' || view === 'help' || archived) ? [] : (watching ? ['watch', 'report', 'list'] : ['setup', 'game', 'report']);
     Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function (b) { b.hidden = tabsFor.indexOf(b.dataset.v) < 0; b.setAttribute('aria-selected', b.dataset.v === view); });
     document.querySelector('.tabs').hidden = !tabsFor.length;
 
@@ -869,6 +993,10 @@ tr.total td { font-weight: 700; background: var(--bg); }
     S = JSON.parse(JSON.stringify(x.state)); S.team = 'H'; S.live = null;
     view = 'report'; render(); window.scrollTo(0, 0);
   }
+  var helpFrom = 'home';
+  function openHelp() { if (view !== 'help') helpFrom = view; view = 'help'; render(); window.scrollTo(0, 0); }
+  $('goHelp').onclick = openHelp; $('btnHelp').onclick = openHelp; $('btnHelpGame').onclick = openHelp;
+  $('helpBack').onclick = function () { view = helpFrom || 'home'; render(); window.scrollTo(0, 0); };
   $('goArchive').onclick = openArchiveList;
   $('btnArch').onclick = openArchiveList;
   $('archHome').onclick = function () { view = 'home'; render(); };
