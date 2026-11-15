@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0c6b4f"><meta name="application-name" content="GoalTracker"><meta name="version" content="1.0.0"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GoalTracker"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0c6b4f"><meta name="application-name" content="GoalTracker"><meta name="version" content="1.1.0"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GoalTracker"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Torzähler Handball</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
@@ -59,9 +59,25 @@ h2:first-child { margin-top: 12px; }
 .stepper button { width: 52px; font-size: 24px; padding: 0; }
 .stepper b { font: 700 28px var(--font-display); min-width: 32px; text-align: center; }
 .ver { margin: 28px 0 0; text-align: center; font-size: 12px; color: var(--muted); }
+.brand { font-family: var(--font-display); font-size: 44px; margin: 24px 0 0; text-align: center; letter-spacing: .02em; }
+.glist { display: flex; flex-direction: column; gap: 8px; }
+.gitem { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; text-align: left; padding: 10px 12px; min-height: 64px; }
+.gitem .gt { font-weight: 600; font-size: 16px; min-width: 0; overflow-wrap: anywhere; }
+.gitem .gs { font-family: var(--font-display); font-weight: 700; font-size: 30px; grid-row: 1 / span 2; grid-column: 2; align-self: center; font-variant-numeric: tabular-nums; }
+.gitem .sub { grid-column: 1; }
+.livedot { color: var(--miss); }
+.wp { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; text-align: center; padding: 6px 2px; }
+.wp b { display: block; font-family: var(--font-display); font-size: 26px; line-height: 1; }
+.wp span { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.wtitle { text-align: center; font-weight: 600; font-size: 15px; color: var(--fg); margin: 8px 0 0; }
+.watch .nmcol, .watch .log button { display: none; }
+.watch #dl { display: none !important; }
+.zlab { fill: var(--fg); font: 600 10px var(--font-body); text-anchor: middle; }
+.zcnt { fill: var(--fg); font: 700 14px var(--font-display); text-anchor: middle; }
+.zfill { fill: var(--accent); stroke: var(--surface); stroke-width: 1.5; }
 .sr { position: absolute; left: -9999px; }
 
-.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding-block: 8px; }
+.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; padding-block: 8px; }
 .tabs button { min-height: 44px; font-weight: 600; font-size: 15px; padding: 0 4px; }
 .tabs button[aria-selected="true"] { background: var(--sel); color: var(--sel-fg); border-color: var(--sel); }
 
@@ -143,15 +159,52 @@ tr.total td { font-weight: 700; background: var(--bg); }
   <nav class="tabs" aria-label="Ansicht">
     <button data-v="setup">Einrichtung</button>
     <button data-v="game">Spiel</button>
+    <button data-v="watch">Spielstand</button>
     <button data-v="report">Auswertung</button>
+    <button data-v="list">Spiele</button>
   </nav>
+
+  <!-- Startseite -->
+  <section class="view" id="v-home" hidden>
+    <h1 class="brand">GoalTracker</h1>
+    <p class="sub" style="margin:0 0 8px;text-align:center">Torzähler für Jugend-Handball</p>
+    <button class="big goal" id="goAdmin">Spiel anlegen und mitzählen</button>
+    <button class="big" id="goWatch">Spiele live ansehen</button>
+    <p class="sub" id="liveNote" style="text-align:center"></p>
+  </section>
+
+  <!-- Spielliste -->
+  <section class="view" id="v-list" hidden>
+    <h2>Live-Spiele</h2>
+    <label class="sr" for="listFilter">Mannschaft suchen</label>
+    <input class="txt" id="listFilter" placeholder="Mannschaft suchen" autocomplete="off">
+    <div class="glist" id="gameList"></div>
+    <button id="listHome">Zur Startseite</button>
+  </section>
+
+  <!-- Zuschauer -->
+  <section class="view" id="v-watch" hidden>
+    <p class="wtitle" id="wTitle"></p>
+    <div class="top">
+      <button class="team" id="wteamH" aria-pressed="true"><span class="lbl" id="wlblH">Heim</span><span class="num" id="wscoreH">0</span><span class="sub2" id="wsubH"></span></button>
+      <div class="mid"><div class="halflbl" id="whalf"></div><div class="clock" id="wclock">00:00</div><div class="clockof" id="wclockOf"></div><div class="halflbl" id="wwert"></div></div>
+      <button class="team" id="wteamG" aria-pressed="false"><span class="lbl" id="wlblG">Gast</span><span class="num" id="wscoreG">0</span><span class="sub2" id="wsubG"></span></button>
+    </div>
+    <h2>Wurfpositionen · <span id="wTeamName"></span></h2>
+    <div class="courtbox" id="wcourtbox"><svg id="wcourt" viewBox="0 0 300 160" role="img" aria-label="Wurfpositionen" style="display:block;width:100%;height:auto"></svg></div>
+    <h2>Spieler (Tore / Würfe)</h2>
+    <div class="chips" id="wplayers"></div>
+    <h2>Live-Ticker</h2>
+    <ul class="log" id="wlog"></ul>
+    <p class="status" id="wstatus"></p>
+  </section>
 
   <!-- Einrichtung -->
   <section class="view" id="v-setup" hidden>
     <h2>Mannschaften</h2>
     <div class="row2">
-      <div><label class="sub" for="tnH">Heimmannschaft</label><input class="txt" id="tnH" maxlength="20" autocomplete="off"></div>
-      <div><label class="sub" for="tnG">Gastmannschaft</label><input class="txt" id="tnG" maxlength="20" autocomplete="off"></div>
+      <div><label class="sub" for="tnH">Heimmannschaft</label><input class="txt" id="tnH" maxlength="40" autocomplete="off"></div>
+      <div><label class="sub" for="tnG">Gastmannschaft</label><input class="txt" id="tnG" maxlength="40" autocomplete="off"></div>
     </div>
     <h2>Halbzeit</h2>
     <label class="len" for="lenIn">Länge pro Halbzeit <input class="txt" id="lenIn" type="number" inputmode="numeric" min="1" max="60"> Minuten</label>
@@ -173,11 +226,23 @@ tr.total td { font-weight: 700; background: var(--bg); }
     <p class="empty" id="oppNote" hidden>Für diese Mannschaft werden nur Tore gezählt. Ein Kader ist nicht nötig.</p>
     <div class="kader" id="kader"></div>
     <button class="big goal" id="btnToGame">Zum Spiel</button>
+    <h2>Live-Übertragung</h2>
+    <p class="sub" id="liveInfo" style="margin:0"></p>
+    <button class="big goal" id="liveStart">Live-Übertragung starten</button>
+    <div class="oppbox" id="liveBox" hidden>
+      <label class="sr" for="liveLink">Link für Zuschauer</label>
+      <input class="txt" id="liveLink" readonly>
+      <div class="row2"><button id="liveCopy">Link kopieren</button><button id="liveShare">Teilen</button></div>
+      <button class="danger" id="liveStop">Live beenden und Spiel aus der Liste entfernen</button>
+    </div>
+    <p class="sub" id="liveMsg" style="margin:0;color:var(--miss)"></p>
+    <button id="btnHome">Zur Startseite</button>
     <button class="danger" id="btnReset">Neues Spiel (Würfe und Uhr zurücksetzen)</button>
   </section>
 
   <!-- Spiel -->
   <section class="view" id="v-game" hidden>
+    <p class="sub" id="liveBadge" style="margin:0;text-align:center;color:var(--miss);font-weight:600" hidden></p>
     <div class="top">
       <button class="team" id="teamH" aria-pressed="true"><span class="lbl" id="lblH">Heim</span><span class="num" id="scoreH">0</span><span class="sub2" id="subH"></span></button>
       <div class="mid"><div class="halflbl" id="halfLbl"></div><div class="clock" id="clock">00:00</div><div class="clockof" id="clockOf"></div><div class="halflbl" id="wertLbl"></div></div>
@@ -227,7 +292,8 @@ tr.total td { font-weight: 700; background: var(--bg); }
   var POS = [['L','Links'],['HL','Halblinks'],['M','Mitte'],['HR','Halbrechts'],['R','Rechts']];
   var POSNAME = {L:'Links',HL:'Halblinks',M:'Mitte',HR:'Halbrechts',R:'Rechts'};
   var KEY = 'torzaehler-v1';
-  var VERSION = '1.0.0', VERSION_DATE = '14.11.2026';
+  var VERSION = '1.1.0', VERSION_DATE = '15.11.2026';
+  var FB_CONFIG = {"apiKey":"AIzaSyCfTNJIWwUvcZCbFzW39auRzkgU_9MoGVY","authDomain":"goaltracker-b0bd2.firebaseapp.com","databaseURL":"https://goaltracker-b0bd2-default-rtdb.europe-west1.firebasedatabase.app","projectId":"goaltracker-b0bd2","storageBucket":"goaltracker-b0bd2.firebasestorage.app","messagingSenderId":"466673267446","appId":"1:466673267446:web:512afb5f483f9a7a2f72d7"};
   document.getElementById('ver').textContent = 'GoalTracker · Version ' + VERSION + ' · ' + VERSION_DATE;
   var $ = function (id) { return document.getElementById(id); };
   function defTimer(len) { return { len: len || 20, half: 1, phase: 'ready', elapsed: 0, startedAt: 0, alarm: false }; }
@@ -244,9 +310,10 @@ tr.total td { font-weight: 700; background: var(--bg); }
   if (S.opp === undefined) S.opp = 'G';
   if (typeof S.oppK !== 'number') S.oppK = 0;
   if (!S.oppGoals) S.oppGoals = [];
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+  function save() { if (watching) return; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} schedulePublish(); }
 
-  var view = (S.roster.H.length || S.roster.G.length || S.events.length) ? 'game' : 'setup';
+  var view = (S.roster.H.length || S.roster.G.length || S.events.length || (S.live && S.live.on)) ? 'game' : 'home';
+  var watching = false, watchId = null, ADMIN = null;
   var sel = null, pos = null, resetArmed = false, resetTimer = null, stopArmed = false, stopTimer = null, wl = null;
 
   function TN(t) { return S.teamNames[t] || (t === 'H' ? 'Heim' : 'Gast'); }
@@ -267,7 +334,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
   function say(msg) { $('status').textContent = msg; $('status2').textContent = msg; }
 
   /* Uhr */
-  function elapsed() { var T = S.timer; return T.elapsed + (T.phase === 'running' ? Date.now() - T.startedAt : 0); }
+  function elapsed() { var T = S.timer; return T.elapsed + (T.phase === 'running' ? Date.now() + (watching && FB ? FB.offset : 0) - T.startedAt : 0); }
   function fmt(ms) { var s = Math.floor(ms / 1000), m = Math.floor(s / 60); return ('0' + m).slice(-2) + ':' + ('0' + (s % 60)).slice(-2); }
   function renderTimer() {
     var T = S.timer;
@@ -317,7 +384,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
     var g = cnt(pe, isTor);
     var h1 = cnt(pe, function (e) { return isTor(e) && e.half === 1; });
     var q = pe.length ? Math.round(g / pe.length * 100) + ' %' : '–';
-    return '<tr class="' + cls + '"><td class="nr">' + label + '</td><td class="nm">' + esc(name) + '</td><td>' + pe.length + '</td><td>' + g + '</td><td>' + (pe.length - g) + '</td><td>' + q + '</td><td>' + h1 + '</td><td>' + (g - h1) + '</td>' +
+    return '<tr class="' + cls + '"><td class="nr">' + label + '</td><td class="nm nmcol">' + esc(name) + '</td><td>' + pe.length + '</td><td>' + g + '</td><td>' + (pe.length - g) + '</td><td>' + q + '</td><td>' + h1 + '</td><td>' + (g - h1) + '</td>' +
       POS.map(function (p) {
         var a = pe.filter(function (e) { return e.pos === p[0]; });
         return '<td>' + (a.length ? cnt(a, isTor) + '/' + a.length : '<span class="sub">·</span>') + '</td>';
@@ -340,7 +407,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
   }
   function renderReport() {
     $('reportTitle').textContent = S.timer.phase === 'finished' ? 'Gesamtauswertung · Spiel beendet' : 'Gesamtauswertung bisher';
-    var head = '<thead><tr><th>Nr.</th><th style="text-align:left">Name</th><th>Würfe</th><th>Tore</th><th>Fehl</th><th>Quote</th><th>1. HZ</th><th>2. HZ</th>' +
+    var head = '<thead><tr><th>Nr.</th><th class="nmcol" style="text-align:left">Name</th><th>Würfe</th><th>Tore</th><th>Fehl</th><th>Quote</th><th>1. HZ</th><th>2. HZ</th>' +
       POS.map(function (p) { return '<th>' + p[1] + '</th>'; }).join('') + '</tr></thead>';
     var html = ['H', 'G'].map(function (t) {
       var te = evs(t), nums = {};
@@ -362,10 +429,14 @@ tr.total td { font-weight: 700; background: var(--bg); }
     }).join('') : '<li class="sub">Noch keine Einträge.</li>';
   }
 
-  function render() {
+  function render() { renderCore(); renderExtras(); }
+  function renderCore() {
     var t = S.team;
-    ['setup', 'game', 'report'].forEach(function (v) { $('v-' + v).hidden = view !== v; });
-    Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function (b) { b.setAttribute('aria-selected', b.dataset.v === view); });
+    ['home', 'setup', 'game', 'report', 'list', 'watch'].forEach(function (v) { $('v-' + v).hidden = view !== v; });
+    document.body.classList.toggle('watch', watching);
+    var tabsFor = (view === 'home' || view === 'list') ? [] : (watching ? ['watch', 'report', 'list'] : ['setup', 'game', 'report']);
+    Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function (b) { b.hidden = tabsFor.indexOf(b.dataset.v) < 0; b.setAttribute('aria-selected', b.dataset.v === view); });
+    document.querySelector('.tabs').hidden = !tabsFor.length;
 
     var sc = { H: 0, G: 0 };
     S.events.forEach(function (e) { if (isTor(e)) sc[e.team]++; });
@@ -407,7 +478,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
   function setView(v) { view = v; render(); window.scrollTo(0, 0); wake(); }
   function wake() {
     try {
-      if (view === 'game' && !document.hidden && navigator.wakeLock && !(wl && !wl.released)) {
+      if ((view === 'game' || view === 'watch') && !document.hidden && navigator.wakeLock && !(wl && !wl.released)) {
         navigator.wakeLock.request('screen').then(function (l) { wl = l; }, function () {});
       }
     } catch (e) {}
@@ -422,7 +493,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
   }
 
   /* Ereignisse */
-  Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function (b) { b.onclick = function () { setView(b.dataset.v); }; });
+  Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function (b) { b.onclick = function () { tabGo(b.dataset.v); }; });
   $('btnToGame').onclick = function () { setView('game'); };
   $('tnH').value = S.teamNames.H; $('tnG').value = S.teamNames.G;
   $('tnH').oninput = function () { S.teamNames.H = $('tnH').value.trim() || 'Heim'; save(); render(); };
@@ -515,6 +586,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
   };
   setInterval(function () {
     var T = S.timer;
+    if (watching) { tickWatch(); return; }
     if (T.phase !== 'running') return;
     if (!T.alarm && elapsed() >= T.len * 60000) {
       T.elapsed = T.len * 60000; T.phase = 'paused'; T.alarm = true; save(); render();
@@ -524,6 +596,228 @@ tr.total td { font-weight: 700; background: var(--bg); }
     }
     renderTimer();
   }, 250);
+
+  /* ===== Live-Übertragung und Zuschauer (Firebase Realtime Database) ===== */
+  var FB = null, fbWait = null, listUnsub = null, gameUnsub = null, LIST = [], pubTimer = null, liveStopArmed = false, liveStopTimer = null, viewTeam = 'H', meta = null, liveSent = '';
+  var COURT_LINES = '<line class="c-line" x1="0" y1="10" x2="300" y2="10"/><rect class="c-goal" x="132" y="1" width="36" height="9"/><path class="c-line" d="M60,10 A72,72 0 0 0 132,82 L168,82 A72,72 0 0 0 240,10"/><path class="c-line c-dash" d="M24,10 A108,108 0 0 0 132,118 L168,118 A108,108 0 0 0 276,10"/><line class="c-line" x1="144" y1="94" x2="156" y2="94"/><text class="c-txt" x="150" y="78" text-anchor="middle">6 m</text><text class="c-txt" x="160" y="92">7 m</text><text class="c-txt" x="176" y="115">9 m</text>';
+  function arr(x) { if (!x) return []; if (Array.isArray(x)) return x.filter(Boolean); return Object.keys(x).map(function (k) { return x[k]; }); }
+  function fbInit(needAuth) {
+    if (!FB_CONFIG) return Promise.reject(new Error('nicht eingerichtet'));
+    if (fbWait && (!needAuth || (FB && FB.uid))) return fbWait;
+    fbWait = (async function () {
+      var base = 'https://www.gstatic.com/firebasejs/10.14.1/';
+      if (!FB) {
+        var app = await import(base + 'firebase-app.js');
+        var rt = await import(base + 'firebase-database.js');
+        var a = app.initializeApp(FB_CONFIG);
+        FB = { app: a, rt: rt, db: rt.getDatabase(a), offset: 0, uid: null, online: false };
+        rt.onValue(rt.ref(FB.db, '.info/serverTimeOffset'), function (s) { FB.offset = s.val() || 0; });
+        rt.onValue(rt.ref(FB.db, '.info/connected'), function (s) { FB.online = !!s.val(); renderExtras(); });
+      }
+      if (needAuth && !FB.uid) {
+        var au = await import(base + 'firebase-auth.js');
+        var auth = au.getAuth(FB.app);
+        if (auth.authStateReady) await auth.authStateReady();
+        if (!auth.currentUser) await au.signInAnonymously(auth);
+        FB.uid = auth.currentUser.uid;
+      }
+      return FB;
+    })().catch(function (e) { fbWait = null; throw e; });
+    return fbWait;
+  }
+  function genId() { var c = 'abcdefghjkmnpqrstuvwxyz23456789', s = ''; for (var i = 0; i < 8; i++) s += c.charAt(Math.floor(Math.random() * c.length)); return s; }
+  function liveUrl() { return location.href.split('#')[0].split('?')[0] + '?z=' + S.live.id; }
+  function snapshot(offset) {
+    var T = S.timer;
+    return {
+      events: S.events.map(function (e) { return { id: e.id, team: e.team, num: e.num, res: e.res, pos: e.pos || '', half: e.half || 1, t: e.t || 0 }; }),
+      oppGoals: (S.oppGoals || []).map(function (g) { return { id: g.id, half: g.half || 1, t: g.t || 0 }; }),
+      roster: { H: S.roster.H, G: S.roster.G },
+      teamNames: { H: TN('H'), G: TN('G') },
+      mult: !!S.mult, opp: S.opp || '', oppK: S.oppK || 0,
+      timer: { len: T.len, half: T.half, phase: T.phase, elapsed: T.elapsed, startedAt: T.phase === 'running' ? T.startedAt + (offset || 0) : 0, alarm: !!T.alarm }
+    };
+  }
+  function normalize(v) {
+    v = v || {}; var T = v.timer || {}, r = v.roster || {};
+    return {
+      team: viewTeam, roster: { H: arr(r.H), G: arr(r.G) }, names: { H: {}, G: {} },
+      teamNames: v.teamNames || { H: 'Heim', G: 'Gast' },
+      events: arr(v.events).map(function (e) { return { id: e.id, team: e.team, num: e.num, res: e.res, pos: e.pos || null, half: e.half, t: e.t }; }),
+      oppGoals: arr(v.oppGoals), mult: v.mult !== false, opp: v.opp === undefined ? '' : v.opp, oppK: v.oppK || 0,
+      timer: { len: T.len || 20, half: T.half || 1, phase: T.phase || 'ready', elapsed: T.elapsed || 0, startedAt: T.startedAt || 0, alarm: !!T.alarm }
+    };
+  }
+  function schedulePublish() { if (watching || !S.live || !S.live.on) return; clearTimeout(pubTimer); pubTimer = setTimeout(publishNow, 400); }
+  async function publishNow() {
+    if (!S.live || !S.live.on || watching) return false;
+    try {
+      var f = await fbInit(true), rt = f.rt, a = res('H'), b = res('G'), T = S.timer, up = {};
+      up['index/' + S.live.id] = { title: TN('H') + ' – ' + TN('G'), home: TN('H'), away: TN('G'), sH: S.mult ? a.m : a.g, sG: S.mult ? b.m : b.g, mult: !!S.mult, phase: T.phase, half: T.half, owner: f.uid, created: S.live.created, updated: rt.serverTimestamp() };
+      up['games/' + S.live.id + '/state'] = snapshot(f.offset);
+      await rt.update(rt.ref(f.db), up);
+      var d = new Date(); liveSent = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ':' + ('0' + d.getSeconds()).slice(-2);
+      renderExtras(); return true;
+    } catch (e) {
+      liveSent = ''; clearTimeout(pubTimer); if (S.live && S.live.on) pubTimer = setTimeout(publishNow, 15000);
+      renderExtras(); return false;
+    }
+  }
+  async function startLive() {
+    if (!FB_CONFIG) return;
+    if (TN('H') === 'Heim') { $('liveMsg').textContent = 'Bitte oben zuerst den Namen der Heimmannschaft eintragen, zum Beispiel HB Filderstadt E1-Jungen.'; return; }
+    $('liveMsg').textContent = 'Verbinde …';
+    var ok = false;
+    for (var i = 0; i < 2 && !ok; i++) {
+      S.live = { id: genId(), on: true, created: Date.now() };
+      ok = await publishNow();
+    }
+    if (ok) { save(); $('liveMsg').textContent = ''; }
+    else { S.live = null; $('liveMsg').textContent = 'Live-Übertragung konnte nicht gestartet werden. Bitte Internet prüfen und erneut versuchen.'; }
+    render();
+  }
+  function enterWatch(id) {
+    if (!watching) ADMIN = S;
+    stopList();
+    if (gameUnsub) { gameUnsub(); gameUnsub = null; }
+    watching = true; watchId = id; meta = null; viewTeam = 'H';
+    S = normalize(null); view = 'watch'; render();
+    subscribeGame(id);
+  }
+  function leaveWatch(toView) {
+    if (gameUnsub) { gameUnsub(); gameUnsub = null; }
+    if (watching) { watching = false; S = ADMIN || S; }
+    watchId = null; view = toView; render();
+    try { history.replaceState(null, '', location.href.split('?')[0].split('#')[0]); } catch (e) {}
+  }
+  async function subscribeGame(id) {
+    try {
+      var f = await fbInit(false), rt = f.rt;
+      var u1 = rt.onValue(rt.ref(f.db, 'games/' + id + '/state'), function (s) {
+        if (!watching || watchId !== id) return;
+        var v = s.val();
+        if (v === null) { $('wstatus').textContent = 'Dieses Spiel gibt es nicht (mehr).'; return; }
+        $('wstatus').textContent = '';
+        S = normalize(v); S.team = viewTeam; render();
+      }, function () { $('wstatus').textContent = 'Keine Verbindung zum Spiel.'; });
+      var u2 = rt.onValue(rt.ref(f.db, 'index/' + id), function (s) { meta = s.val(); if (watching) renderWatch(); });
+      var un = function () { u1(); u2(); };
+      if (!watching || watchId !== id) un(); else gameUnsub = un;
+    } catch (e) { $('wstatus').textContent = 'Live nicht erreichbar. Bitte Internetverbindung prüfen.'; }
+  }
+  async function startList() {
+    $('gameList').innerHTML = '<p class="empty">Lade Spiele …</p>';
+    try {
+      var f = await fbInit(false), rt = f.rt;
+      stopList();
+      listUnsub = rt.onValue(rt.query(rt.ref(f.db, 'index'), rt.orderByChild('updated'), rt.limitToLast(80)), function (s) {
+        var a = []; s.forEach(function (c) { var v = c.val(); v.id = c.key; a.push(v); });
+        LIST = a.reverse(); renderList();
+      }, function () { $('gameList').innerHTML = '<p class="empty">Spiele konnten nicht geladen werden.</p>'; });
+    } catch (e) { $('gameList').innerHTML = '<p class="empty">' + (FB_CONFIG ? 'Keine Verbindung. Bitte Internet prüfen.' : 'Live ist noch nicht eingerichtet.') + '</p>'; }
+  }
+  function stopList() { if (listUnsub) { listUnsub(); listUnsub = null; } }
+  function openList() {
+    if (watching) leaveWatch('list'); else { view = 'list'; render(); }
+    startList();
+  }
+  function tabGo(v) { if (v === 'list') openList(); else setView(v); }
+  function ago(ms) { var m = Math.max(0, Math.round(((Date.now() + (FB ? FB.offset : 0)) - ms) / 60000)); return m < 1 ? 'gerade eben' : (m < 60 ? 'vor ' + m + ' Min.' : 'vor ' + Math.round(m / 60) + ' Std.'); }
+  function phaseText(v) { return v.phase === 'running' ? v.half + '. Halbzeit · läuft' : v.phase === 'paused' ? v.half + '. Halbzeit · Pause' : v.phase === 'finished' ? 'beendet' : (v.half === 2 ? 'Halbzeitpause' : 'noch nicht gestartet'); }
+  function renderList() {
+    var q = $('listFilter').value.trim().toLowerCase(), now = Date.now() + (FB ? FB.offset : 0);
+    var rows = LIST.filter(function (v) { return typeof v.updated === 'number' && now - v.updated < 86400000 && (!q || (v.title || '').toLowerCase().indexOf(q) >= 0); });
+    $('gameList').innerHTML = rows.length ? rows.map(function (v) {
+      return '<button class="gitem" data-g="' + esc(v.id) + '"><span class="gt">' + esc(v.title) + '</span><span class="gs">' + v.sH + ' : ' + v.sG + '</span><span class="sub">' + (v.phase === 'running' ? '<b class="livedot">● LIVE</b> · ' : '') + esc(phaseText(v)) + ' · ' + ago(v.updated) + '</span></button>';
+    }).join('') : '<p class="empty">Keine Spiele in den letzten 24 Stunden' + (q ? ' zu „' + esc(q) + '“' : '') + '.</p>';
+  }
+  function tickWatch() {
+    var T = S.timer;
+    $('wclock').textContent = fmt(elapsed());
+    $('wclockOf').textContent = 'von ' + fmt(T.len * 60000);
+    $('whalf').textContent = T.phase === 'finished' ? 'Spielende' : T.half + '. Halbzeit' + (T.phase === 'running' ? '' : T.phase === 'paused' ? ' · Pause' : '');
+  }
+  function renderWatch() {
+    var t = S.team;
+    $('wTitle').textContent = meta && meta.title ? meta.title : '';
+    ['H', 'G'].forEach(function (k) {
+      var r = res(k);
+      $('wlbl' + k).textContent = TN(k); $('wscore' + k).textContent = S.mult ? r.m : r.g;
+      $('wsub' + k).textContent = r.g + ' Tore × ' + r.k + ' = ' + r.m;
+      $('wteam' + k).setAttribute('aria-pressed', t === k);
+    });
+    $('wwert').textContent = S.mult ? 'Wertung mit Mult.' : 'Wertung ohne Mult.';
+    tickWatch();
+    $('wTeamName').textContent = TN(t);
+    var te = evs(t), isOpp = (t === S.opp);
+    $('wcourtbox').hidden = isOpp;
+    var counts = {}, mx = 1;
+    ZB.forEach(function (z) { var a = te.filter(function (e) { return e.pos === z[0]; }); counts[z[0]] = { g: cnt(a, isTor), n: a.length }; if (a.length > mx) mx = a.length; });
+    var s = '<rect class="c-bg" x="0" y="0" width="300" height="160"/><path class="c-area" d="M60,10 A72,72 0 0 0 132,82 L168,82 A72,72 0 0 0 240,10 Z"/>';
+    ZB.forEach(function (z) { s += '<path class="zfill" style="fill-opacity:' + (0.06 + 0.6 * counts[z[0]].n / mx).toFixed(2) + '" d="M150,10 L' + pt(z[1], 400) + ' L' + pt(z[2], 400) + ' Z"/>'; });
+    s += COURT_LINES;
+    ZB.forEach(function (z) { s += '<text class="zlab" x="' + z[3] + '" y="' + (z[4] - 6) + '">' + POSNAME[z[0]] + '</text><text class="zcnt" x="' + z[3] + '" y="' + (z[4] + 8) + '">' + counts[z[0]].g + '/' + counts[z[0]].n + '</text>'; });
+    $('wcourt').innerHTML = s;
+    var nums = {};
+    S.roster[t].forEach(function (n) { nums[n] = 1; });
+    te.forEach(function (e) { if (e.num !== null) nums[e.num] = 1; });
+    var list = Object.keys(nums).map(Number).sort(function (a, b) { return a - b; });
+    $('wplayers').innerHTML = isOpp ? '<p class="empty" style="grid-column:1/-1">Gegner: nur Tore gezählt, ' + res(t).g + ' Tore.</p>' : (list.length ? list.map(function (n) {
+      var pe = te.filter(function (e) { return e.num === n; });
+      return '<div class="wp"><b>' + n + '</b><span>' + cnt(pe, isTor) + ' / ' + pe.length + '</span></div>';
+    }).join('') : '<p class="empty" style="grid-column:1/-1">Noch keine Spieler.</p>');
+    var recent = allEvents().reverse().slice(0, 12);
+    $('wlog').innerHTML = recent.length ? recent.map(function (e) {
+      return '<li><span class="n">' + (e.num === null ? '–' : e.num) + '</span><span class="r"><span class="tag ' + (e.res === 'tor' ? 't' : 'f') + '">' + (e.res === 'tor' ? 'Tor' : 'Fehlwurf') + '</span> <span class="sub">· ' + (e.num === null ? 'Gegner' : e.pos ? POSNAME[e.pos] : 'ohne Position') + ' · ' + esc(TN(e.team)) + (e.t !== undefined ? ' · ' + e.half + '. HZ ' + fmt(e.t) : '') + '</span></span></li>';
+    }).join('') : '<li class="sub">Noch keine Würfe.</li>';
+  }
+  function renderExtras() {
+    var cfg = !!FB_CONFIG, on = !!(S.live && S.live.on) && !watching;
+    $('liveNote').textContent = cfg ? '' : 'Live-Ansicht ist noch nicht eingerichtet.';
+    $('goWatch').disabled = !cfg;
+    if (!watching) {
+      $('liveStart').hidden = on; $('liveStart').disabled = !cfg;
+      $('liveBox').hidden = !on;
+      $('liveInfo').textContent = !cfg ? 'Noch nicht eingerichtet.' : 'Zuschauer verfolgen das Spiel live auf ihrem Handy. Es werden nur Nummern übertragen, keine Namen.';
+      if (on) { $('liveLink').value = liveUrl(); $('liveStop').textContent = liveStopArmed ? 'Wirklich beenden?' : 'Live beenden und Spiel aus der Liste entfernen'; }
+      $('liveBadge').hidden = !on;
+      if (on) $('liveBadge').textContent = '● Live · ' + (liveSent ? 'gesendet ' + liveSent : 'verbinde …');
+    }
+    if (watching) renderWatch();
+    if (view === 'list') renderList();
+  }
+  function startup() {
+    var id = null;
+    try { id = new URLSearchParams(location.search).get('z'); } catch (e) {}
+    if (id && /^[a-z0-9]{4,16}$/i.test(id)) { if (FB_CONFIG) enterWatch(id.toLowerCase()); else { view = 'home'; render(); } }
+    else if (S.live && S.live.on) schedulePublish();
+    if (location.hash === '#gt-test') window.__GT = { snapshot: function () { return snapshot(0); }, fakeWatch: function (v, m) { if (!watching) ADMIN = S; watching = true; watchId = 'test'; meta = m; viewTeam = 'H'; S = normalize(v); S.team = 'H'; view = 'watch'; render(); } };
+  }
+  $('goAdmin').onclick = function () { setView('setup'); };
+  $('goWatch').onclick = function () { openList(); };
+  $('btnHome').onclick = function () { view = 'home'; render(); };
+  $('listHome').onclick = function () { stopList(); view = 'home'; render(); };
+  $('listFilter').oninput = renderList;
+  $('gameList').onclick = function (e) { var b = e.target.closest('[data-g]'); if (b) enterWatch(b.dataset.g); };
+  $('wteamH').onclick = function () { viewTeam = 'H'; S.team = 'H'; render(); };
+  $('wteamG').onclick = function () { viewTeam = 'G'; S.team = 'G'; render(); };
+  $('liveStart').onclick = startLive;
+  $('liveCopy').onclick = function () {
+    var el = $('liveLink');
+    try { navigator.clipboard.writeText(el.value).then(function () { $('liveMsg').style.color = 'var(--muted)'; $('liveMsg').textContent = 'Link kopiert.'; }, function () { el.select(); }); } catch (e) { el.select(); }
+  };
+  $('liveShare').hidden = !navigator.share;
+  $('liveShare').onclick = function () { try { navigator.share({ title: 'GoalTracker live', text: TN('H') + ' – ' + TN('G') + ' live', url: $('liveLink').value }); } catch (e) {} };
+  $('liveStop').onclick = async function () {
+    if (!liveStopArmed) { liveStopArmed = true; render(); liveStopTimer = setTimeout(function () { liveStopArmed = false; render(); }, 4000); return; }
+    clearTimeout(liveStopTimer); liveStopArmed = false;
+    try {
+      var f = await fbInit(true), up = {};
+      up['index/' + S.live.id] = null; up['games/' + S.live.id] = null;
+      await f.rt.update(f.rt.ref(f.db), up);
+    } catch (e) { $('liveMsg').textContent = 'Live konnte nicht beendet werden. Bitte Internet prüfen.'; render(); return; }
+    S.live = null; save(); render();
+  };
 
   $('btnReset').onclick = function () {
     if (!resetArmed) {
@@ -682,7 +976,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
     catch (e) { say('Kopieren nicht möglich.'); }
   };
 
-  render(); wake();
+  render(); wake(); startup();
 })();
 </script>
 <script>if('serviceWorker' in navigator && /^https?:/.test(location.protocol)){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
