@@ -1,0 +1,32 @@
+{
+    "description":  "Torzähler für Jugend-Handball",
+    "short_name":  "GoalTracker",
+    "background_color":  "#f1f4f2",
+    "icons":  [
+                  {
+                      "purpose":  "any",
+                      "type":  "image/png",
+                      "sizes":  "192x192",
+                      "src":  "icon-192.png"
+                  },
+                  {
+                      "purpose":  "any",
+                      "type":  "image/png",
+                      "sizes":  "512x512",
+                      "src":  "icon-512.png"
+                  },
+                  {
+                      "purpose":  "maskable",
+                      "type":  "image/png",
+                      "sizes":  "512x512",
+                      "src":  "icon-512.png"
+                  }
+              ],
+    "lang":  "de",
+    "orientation":  "portrait",
+    "theme_color":  "#0c6b4f",
+    "display":  "standalone",
+    "name":  "GoalTracker Torzähler",
+    "scope":  "./",
+    "start_url":  "./index.html"
+}

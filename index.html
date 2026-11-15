@@ -1,0 +1,689 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0c6b4f"><meta name="application-name" content="GoalTracker"><meta name="version" content="1.0.0"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GoalTracker"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<title>Torzähler Handball</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<script src="lib/jspdf.umd.min.js"></script>
+<script src="lib/jspdf.plugin.autotable.min.js"></script>
+<script src="lib/xlsx.full.min.js"></script>
+<style>
+/* Layout: drei Reiter. Einrichtung (Namen), Spiel (nur Stand, Uhr, Nummern, Wurfposition am Spielfeld), Auswertung (Namen wieder sichtbar). */
+:root {
+  --bg: #f1f4f2;
+  --surface: #ffffff;
+  --fg: #14201b;
+  --muted: #5b6a63;
+  --line: #d4ddd8;
+  --accent: #0c6b4f;
+  --accent-fg: #ffffff;
+  --miss: #b4421f;
+  --miss-fg: #ffffff;
+  --sel: #14201b;
+  --sel-fg: #f1f4f2;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "Barlow", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1613; --surface: #18221e; --fg: #e8efeb; --muted: #94a59c; --line: #2b3a34;
+    --accent: #3fbf93; --accent-fg: #07110d; --miss: #ef8a64; --miss-fg: #1a0a03;
+    --sel: #e8efeb; --sel-fg: #0f1613; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1613; --surface: #18221e; --fg: #e8efeb; --muted: #94a59c; --line: #2b3a34;
+  --accent: #3fbf93; --accent-fg: #07110d; --miss: #ef8a64; --miss-fg: #1a0a03;
+  --sel: #e8efeb; --sel-fg: #0f1613; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px;
+  padding-block: 0 32px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+main { max-width: 520px; margin: 0 auto; }
+button { font: inherit; color: inherit; cursor: pointer; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; min-height: 48px; touch-action: manipulation; }
+button:disabled { opacity: .4; cursor: default; }
+button:focus-visible, input:focus-visible, .zone:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+h2 { font-family: var(--font-display); font-size: 15px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 18px 0 8px; font-weight: 600; }
+h2:first-child { margin-top: 12px; }
+.view { display: flex; flex-direction: column; gap: 12px; }
+.sub { color: var(--muted); font-size: 13px; }
+.empty { color: var(--muted); margin: 6px 0; }
+.team .sub2 { font-size: 11px; line-height: 1.2; color: var(--muted); padding: 3px 2px 0; font-variant-numeric: tabular-nums; }
+.oppbox { display: flex; flex-direction: column; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+#btnOppUndo { font: 600 17px var(--font-body); letter-spacing: 0; text-transform: none; }
+.stepper { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.stepper span { flex: 1; min-width: 0; }
+.stepper button { width: 52px; font-size: 24px; padding: 0; }
+.stepper b { font: 700 28px var(--font-display); min-width: 32px; text-align: center; }
+.ver { margin: 28px 0 0; text-align: center; font-size: 12px; color: var(--muted); }
+.sr { position: absolute; left: -9999px; }
+
+.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding-block: 8px; }
+.tabs button { min-height: 44px; font-weight: 600; font-size: 15px; padding: 0 4px; }
+.tabs button[aria-selected="true"] { background: var(--sel); color: var(--sel-fg); border-color: var(--sel); }
+
+/* Spielansicht */
+.top { display: grid; grid-template-columns: 1fr 1.25fr 1fr; gap: 6px; align-items: stretch; }
+.team { min-height: 0; padding: 6px 2px; border: 2px solid var(--line); border-radius: 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+.team[aria-pressed="true"] { border-color: var(--accent); }
+.team .lbl { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 4px; }
+.team .num { font-family: var(--font-display); font-weight: 700; font-size: 56px; line-height: 1; font-variant-numeric: tabular-nums; }
+.mid { text-align: center; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+.halflbl { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.clock { font-family: var(--font-display); font-weight: 700; font-size: clamp(38px, 12vw, 56px); line-height: 1; font-variant-numeric: tabular-nums; }
+.clockof { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.tbtns { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 6px; }
+.tbtns button { font-weight: 600; min-height: 46px; padding: 0 4px; font-size: 15px; }
+.goal { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.miss { background: var(--miss); color: var(--miss-fg); border-color: var(--miss); }
+.danger { color: var(--miss); border-color: var(--miss); }
+.chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 6px; }
+.chip { font-family: var(--font-display); font-weight: 700; font-size: 28px; min-height: 52px; padding: 0; }
+.chip[aria-pressed="true"] { background: var(--sel); color: var(--sel-fg); border-color: var(--sel); }
+.courtbox { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 6px; }
+#court { display: block; width: 100%; height: auto; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.c-bg { fill: var(--surface); }
+.c-area { fill: var(--accent); fill-opacity: .16; }
+.c-line { fill: none; stroke: var(--fg); stroke-width: 1.5; pointer-events: none; }
+.c-dash { stroke-dasharray: 5 4; }
+.c-goal { fill: var(--bg); stroke: var(--fg); stroke-width: 2; pointer-events: none; }
+.c-txt { fill: var(--muted); font: 500 8px var(--font-body); pointer-events: none; }
+.zone { fill: var(--accent); fill-opacity: .08; stroke: var(--surface); stroke-width: 1.5; cursor: pointer; }
+.zone.on { fill-opacity: .6; }
+.zlbl { fill: var(--fg); font: 600 11px var(--font-body); text-anchor: middle; pointer-events: none; }
+.zlbl.on { font-weight: 700; }
+.cap { margin: 4px 2px 0; font-size: 12px; color: var(--muted); text-align: center; }
+.act { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.act button { min-height: 72px; font-family: var(--font-display); font-weight: 700; font-size: 32px; letter-spacing: .04em; text-transform: uppercase; }
+.act button:active { transform: scale(.98); }
+.status { min-height: 22px; margin: 0; color: var(--muted); font-size: 15px; text-align: center; }
+
+/* Einrichtung */
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+input.txt, .add input { height: 48px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); padding: 0 12px; font: 500 17px var(--font-body); min-width: 0; width: 100%; }
+.len { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.len input { width: 80px; text-align: center; font: 600 22px var(--font-display); }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.seg button[aria-pressed="true"] { background: var(--sel); color: var(--sel-fg); border-color: var(--sel); }
+.add { display: grid; grid-template-columns: 76px 1fr auto; gap: 8px; }
+#numIn { text-align: center; font: 600 24px var(--font-display); padding: 0; }
+.add button { padding: 0 14px; font-weight: 600; }
+.kader { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 4px 10px; }
+.krow { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+.krow b { font-family: var(--font-display); font-size: 26px; min-width: 38px; }
+.krow input { flex: 1; min-width: 0; height: 44px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); padding: 0 10px; font: 500 16px var(--font-body); }
+.krow button { min-height: 44px; padding: 0 12px; font-size: 14px; }
+.big { min-height: 60px; font-weight: 700; font-size: 20px; width: 100%; }
+
+/* Auswertung */
+.tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 15px; }
+th, td { padding: 8px; text-align: center; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+td.nr { font-family: var(--font-display); font-weight: 700; font-size: 22px; }
+td.nm { text-align: left; font-weight: 500; }
+tr.total td { font-weight: 700; background: var(--bg); }
+.tablewrap td:nth-child(n+7), .tablewrap th:nth-child(n+7) { border-left: 1px solid var(--line); }
+.rep h3 { font-family: var(--font-display); font-size: 22px; margin: 14px 0 6px; display: flex; justify-content: space-between; gap: 8px; }
+.log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.log li { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 6px 6px 6px 12px; }
+.log .n { font-family: var(--font-display); font-weight: 700; font-size: 24px; min-width: 40px; }
+.log .r { flex: 1; min-width: 0; }
+.tag { font-weight: 600; }
+.tag.t { color: var(--accent); }
+.tag.f { color: var(--miss); }
+.log button { min-height: 40px; padding: 0 12px; font-size: 14px; }
+</style>
+
+<main>
+  <nav class="tabs" aria-label="Ansicht">
+    <button data-v="setup">Einrichtung</button>
+    <button data-v="game">Spiel</button>
+    <button data-v="report">Auswertung</button>
+  </nav>
+
+  <!-- Einrichtung -->
+  <section class="view" id="v-setup" hidden>
+    <h2>Mannschaften</h2>
+    <div class="row2">
+      <div><label class="sub" for="tnH">Heimmannschaft</label><input class="txt" id="tnH" maxlength="20" autocomplete="off"></div>
+      <div><label class="sub" for="tnG">Gastmannschaft</label><input class="txt" id="tnG" maxlength="20" autocomplete="off"></div>
+    </div>
+    <h2>Halbzeit</h2>
+    <label class="len" for="lenIn">Länge pro Halbzeit <input class="txt" id="lenIn" type="number" inputmode="numeric" min="1" max="60"> Minuten</label>
+    <h2>Wertung</h2>
+    <div class="seg"><button id="wMit">Mit Multiplikator</button><button id="wOhne">Ohne Multiplikator</button></div>
+    <p class="sub" style="margin:0">Mit Multiplikator zählt: Tore mal Anzahl der Spieler, die getroffen haben. Beide Ergebnisse werden immer angezeigt, die Einstellung bestimmt nur das gewertete.</p>
+    <h2>Gegner</h2>
+    <div class="seg" style="grid-template-columns:1fr"><button id="oppG"></button><button id="oppH"></button><button id="oppN">Beide Mannschaften mit Spielern</button></div>
+    <p class="sub" style="margin:0">Bei der Gegnermannschaft werden nur die Tore gezählt, ohne Nummern.</p>
+    <h2>Kader</h2>
+    <div class="seg"><button id="segH"></button><button id="segG"></button></div>
+    <form class="add" id="addForm">
+      <label class="sr" for="numIn">Trikotnummer</label>
+      <input id="numIn" inputmode="numeric" pattern="[0-9]*" maxlength="2" placeholder="Nr." autocomplete="off">
+      <label class="sr" for="nameIn">Name</label>
+      <input id="nameIn" maxlength="40" placeholder="Name" autocomplete="off">
+      <button type="submit" class="goal">Hinzufügen</button>
+    </form>
+    <p class="empty" id="oppNote" hidden>Für diese Mannschaft werden nur Tore gezählt. Ein Kader ist nicht nötig.</p>
+    <div class="kader" id="kader"></div>
+    <button class="big goal" id="btnToGame">Zum Spiel</button>
+    <button class="danger" id="btnReset">Neues Spiel (Würfe und Uhr zurücksetzen)</button>
+  </section>
+
+  <!-- Spiel -->
+  <section class="view" id="v-game" hidden>
+    <div class="top">
+      <button class="team" id="teamH" aria-pressed="true"><span class="lbl" id="lblH">Heim</span><span class="num" id="scoreH">0</span><span class="sub2" id="subH"></span></button>
+      <div class="mid"><div class="halflbl" id="halfLbl"></div><div class="clock" id="clock">00:00</div><div class="clockof" id="clockOf"></div><div class="halflbl" id="wertLbl"></div></div>
+      <button class="team" id="teamG" aria-pressed="false"><span class="lbl" id="lblG">Gast</span><span class="num" id="scoreG">0</span><span class="sub2" id="subG"></span></button>
+    </div>
+    <div class="tbtns">
+      <button id="btnStart" class="goal">Start</button>
+      <button id="btnPause">Pause</button>
+      <button id="btnStop" class="danger">Stopp</button>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="oppbox" id="oppPanel" hidden>
+      <p class="sub" style="margin:0;text-align:center">Gegner: nur Tore zählen, ohne Spieler.</p>
+      <div class="act"><button class="goal" id="btnOppGoal">Tor</button><button id="btnOppUndo">Tor zurücknehmen</button></div>
+      <div class="stepper"><span>Verschiedene Torschützen (für den Multiplikator)</span><button id="kMinus" aria-label="Weniger Torschützen">−</button><b id="oppK">0</b><button id="kPlus" aria-label="Mehr Torschützen">+</button></div>
+    </div>
+    <div class="courtbox">
+      <svg id="court" viewBox="0 0 300 160" role="group" aria-label="Wurfposition wählen"></svg>
+      <p class="cap">Blick aufs Tor. Position antippen, von der geworfen wurde.</p>
+    </div>
+    <div class="act">
+      <button class="goal" id="btnGoal">Tor</button>
+      <button class="miss" id="btnMiss">Fehlwurf</button>
+    </div>
+    <p class="status" id="status" aria-live="polite"></p>
+    <button id="btnUndo">Letzten Wurf zurücknehmen</button>
+  </section>
+
+  <!-- Auswertung -->
+  <section class="view rep" id="v-report" hidden>
+    <h2 id="reportTitle">Gesamtauswertung</h2>
+    <div id="report"></div>
+    <div class="row2" id="dl" hidden>
+      <button id="btnPdf" class="goal">Spielbericht als PDF</button>
+      <button id="btnXlsx" class="goal">Spielbericht als Excel</button>
+    </div>
+    <button id="btnCopy">Ergebnis als Text kopieren</button>
+    <p class="status" id="status2" aria-live="polite"></p>
+    <h2>Verlauf</h2>
+    <ul class="log" id="log"></ul>
+  </section>
+<p class="ver" id="ver"></p>
+</main>
+
+<script>
+(function () {
+  var POS = [['L','Links'],['HL','Halblinks'],['M','Mitte'],['HR','Halbrechts'],['R','Rechts']];
+  var POSNAME = {L:'Links',HL:'Halblinks',M:'Mitte',HR:'Halbrechts',R:'Rechts'};
+  var KEY = 'torzaehler-v1';
+  var VERSION = '1.0.0', VERSION_DATE = '14.11.2026';
+  document.getElementById('ver').textContent = 'GoalTracker · Version ' + VERSION + ' · ' + VERSION_DATE;
+  var $ = function (id) { return document.getElementById(id); };
+  function defTimer(len) { return { len: len || 20, half: 1, phase: 'ready', elapsed: 0, startedAt: 0, alarm: false }; }
+
+  var S = { team:'H', roster:{H:[],G:[]}, names:{H:{},G:{}}, teamNames:{H:'Heim',G:'Gast'}, events:[], timer:defTimer() };
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) { var p = JSON.parse(raw); if (p && p.roster && p.events) S = p; }
+  } catch (e) {}
+  if (!S.names) S.names = {H:{},G:{}};
+  if (!S.teamNames) S.teamNames = {H:'Heim',G:'Gast'};
+  if (!S.timer) S.timer = defTimer();
+  if (typeof S.mult !== 'boolean') S.mult = true;
+  if (S.opp === undefined) S.opp = 'G';
+  if (typeof S.oppK !== 'number') S.oppK = 0;
+  if (!S.oppGoals) S.oppGoals = [];
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+  var view = (S.roster.H.length || S.roster.G.length || S.events.length) ? 'game' : 'setup';
+  var sel = null, pos = null, resetArmed = false, resetTimer = null, stopArmed = false, stopTimer = null, wl = null;
+
+  function TN(t) { return S.teamNames[t] || (t === 'H' ? 'Heim' : 'Gast'); }
+  function nm(t, n) { return (S.names[t] && S.names[t][n]) || ''; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function oppPseudo() { return (S.oppGoals || []).map(function (g) { return { id: g.id, team: S.opp, num: null, res: 'tor', pos: null, half: g.half, t: g.t }; }); }
+  function allEvents() { return S.events.concat(oppPseudo()).sort(function (a, b) { return a.id - b.id; }); }
+  function evs(t) { return allEvents().filter(function (e) { return e.team === t; }); }
+  function isTor(e) { return e.res === 'tor'; }
+  function cnt(a, f) { return a.filter(f).length; }
+  function res(t) {
+    var te = evs(t), seen = {};
+    te.forEach(function (e) { if (isTor(e) && e.num !== null) seen[e.num] = 1; });
+    var g = cnt(te, isTor), k = Object.keys(seen).length;
+    if (t === S.opp) { k = Math.min(g, k + S.oppK); if (g > 0 && k < 1) k = 1; }
+    return { g: g, k: k, m: g * k };
+  }
+  function say(msg) { $('status').textContent = msg; $('status2').textContent = msg; }
+
+  /* Uhr */
+  function elapsed() { var T = S.timer; return T.elapsed + (T.phase === 'running' ? Date.now() - T.startedAt : 0); }
+  function fmt(ms) { var s = Math.floor(ms / 1000), m = Math.floor(s / 60); return ('0' + m).slice(-2) + ':' + ('0' + (s % 60)).slice(-2); }
+  function renderTimer() {
+    var T = S.timer;
+    $('clock').textContent = fmt(elapsed());
+    $('clockOf').textContent = 'von ' + fmt(T.len * 60000);
+    $('halfLbl').textContent = T.phase === 'finished' ? 'Spielende' : T.half + '. Halbzeit' + (T.phase === 'running' ? '' : T.phase === 'paused' ? ' · Pause' : '');
+    $('btnStart').disabled = T.phase === 'running' || T.phase === 'finished';
+    $('btnStart').textContent = T.phase === 'paused' ? 'Weiter' : (T.half === 2 && T.phase === 'ready' ? '2. Halbzeit' : 'Start');
+    $('btnPause').disabled = T.phase !== 'running';
+    $('btnStop').disabled = T.phase === 'finished' || (T.phase === 'ready' && T.elapsed === 0);
+    $('btnStop').textContent = stopArmed ? (T.half === 1 ? 'Halbzeit Ende?' : 'Spielende?') : 'Stopp';
+  }
+
+  /* Spielfeld: Tor oben, 6 m Torraum, 7 m Strich, 9 m Freiwurflinie. 12 Einheiten = 1 m. */
+  var ZB = [['L',-90,-58,42,40],['HL',-58,-20,72,108],['M',-20,20,150,138],['HR',20,58,228,108],['R',58,90,258,40]];
+  function pt(a, r) { var d = a * Math.PI / 180; return (150 + r * Math.sin(d)).toFixed(1) + ',' + (10 + r * Math.cos(d)).toFixed(1); }
+  (function buildCourt() {
+    var s = '<rect class="c-bg" x="0" y="0" width="300" height="160"/>';
+    s += '<path class="c-area" d="M60,10 A72,72 0 0 0 132,82 L168,82 A72,72 0 0 0 240,10 Z"/>';
+    ZB.forEach(function (z) {
+      s += '<path class="zone" data-p="' + z[0] + '" tabindex="0" role="button" aria-label="' + POSNAME[z[0]] + '" d="M150,10 L' + pt(z[1], 400) + ' L' + pt(z[2], 400) + ' Z"/>';
+    });
+    s += '<line class="c-line" x1="0" y1="10" x2="300" y2="10"/>';
+    s += '<rect class="c-goal" x="132" y="1" width="36" height="9"/>';
+    s += '<path class="c-line" d="M60,10 A72,72 0 0 0 132,82 L168,82 A72,72 0 0 0 240,10"/>';
+    s += '<path class="c-line c-dash" d="M24,10 A108,108 0 0 0 132,118 L168,118 A108,108 0 0 0 276,10"/>';
+    s += '<line class="c-line" x1="144" y1="94" x2="156" y2="94"/>';
+    s += '<text class="c-txt" x="150" y="78" text-anchor="middle">6 m</text>';
+    s += '<text class="c-txt" x="160" y="92">7 m</text>';
+    s += '<text class="c-txt" x="176" y="115">9 m</text>';
+    ZB.forEach(function (z) { s += '<text class="zlbl" id="zl-' + z[0] + '" x="' + z[3] + '" y="' + z[4] + '">' + POSNAME[z[0]] + '</text>'; });
+    $('court').innerHTML = s;
+  })();
+
+  function renderZones() {
+    ZB.forEach(function (z) {
+      var on = pos === z[0];
+      var el = document.querySelector('.zone[data-p="' + z[0] + '"]');
+      el.setAttribute('class', 'zone' + (on ? ' on' : ''));
+      el.setAttribute('aria-pressed', on);
+      $('zl-' + z[0]).setAttribute('class', 'zlbl' + (on ? ' on' : ''));
+    });
+  }
+
+  /* Auswertung */
+  function row(cls, label, name, pe) {
+    var g = cnt(pe, isTor);
+    var h1 = cnt(pe, function (e) { return isTor(e) && e.half === 1; });
+    var q = pe.length ? Math.round(g / pe.length * 100) + ' %' : '–';
+    return '<tr class="' + cls + '"><td class="nr">' + label + '</td><td class="nm">' + esc(name) + '</td><td>' + pe.length + '</td><td>' + g + '</td><td>' + (pe.length - g) + '</td><td>' + q + '</td><td>' + h1 + '</td><td>' + (g - h1) + '</td>' +
+      POS.map(function (p) {
+        var a = pe.filter(function (e) { return e.pos === p[0]; });
+        return '<td>' + (a.length ? cnt(a, isTor) + '/' + a.length : '<span class="sub">·</span>') + '</td>';
+      }).join('') + '</tr>';
+  }
+  function oppBlock(t) {
+    var r = res(t), te = evs(t);
+    var h1 = cnt(te, function (e) { return isTor(e) && e.half === 1; });
+    return '<h3><span>' + esc(TN(t)) + '</span><span>' + r.g + ' Tore · ×' + r.k + ' = ' + r.m + '</span></h3><p class="sub" style="margin:0">Gegner: nur Tore gezählt. 1. HZ ' + h1 + ', 2. HZ ' + (r.g - h1) + '. Torschützen laut Eingabe: ' + r.k + '.</p>';
+  }
+  function verdict(a, b) { return a > b ? TN('H') + ' gewinnt' : (b > a ? TN('G') + ' gewinnt' : 'Unentschieden'); }
+  function summaryHtml() {
+    var h = res('H'), g = res('G');
+    function line(label, a, b, on) {
+      return '<tr class="' + (on ? 'total' : '') + '"><td class="nm">' + label + (on ? ' · gewertet' : '') + '</td><td>' + a + ' : ' + b + '</td><td class="nm">' + esc(verdict(a, b)) + '</td></tr>';
+    }
+    return '<div class="tablewrap"><table><thead><tr><th style="text-align:left">Ergebnis</th><th>Stand</th><th style="text-align:left">Sieger</th></tr></thead><tbody>' +
+      line('Ohne Multiplikator', h.g, g.g, !S.mult) +
+      line('Mit Multiplikator (' + h.g + '×' + h.k + ' : ' + g.g + '×' + g.k + ')', h.m, g.m, S.mult) + '</tbody></table></div>';
+  }
+  function renderReport() {
+    $('reportTitle').textContent = S.timer.phase === 'finished' ? 'Gesamtauswertung · Spiel beendet' : 'Gesamtauswertung bisher';
+    var head = '<thead><tr><th>Nr.</th><th style="text-align:left">Name</th><th>Würfe</th><th>Tore</th><th>Fehl</th><th>Quote</th><th>1. HZ</th><th>2. HZ</th>' +
+      POS.map(function (p) { return '<th>' + p[1] + '</th>'; }).join('') + '</tr></thead>';
+    var html = ['H', 'G'].map(function (t) {
+      var te = evs(t), nums = {};
+      S.roster[t].forEach(function (n) { nums[n] = 1; });
+      te.forEach(function (e) { nums[e.num] = 1; });
+      var list = Object.keys(nums).map(Number).sort(function (a, b) { return a - b; });
+      list = list.filter(function (n) { return !isNaN(n); });
+      if (t === S.opp) return oppBlock(t);
+      if (!list.length) return '';
+      var rows = list.map(function (n) { return row('', n, nm(t, n), te.filter(function (e) { return e.num === n; })); }).join('') + row('total', 'Σ', 'Mannschaft', te);
+      return '<h3><span>' + esc(TN(t)) + '</span><span>' + res(t).g + ' Tore · ×' + res(t).k + ' = ' + res(t).m + '</span></h3><div class="tablewrap"><table>' + head + '<tbody>' + rows + '</tbody></table></div>';
+    }).join('');
+    $('report').innerHTML = html ? summaryHtml() + html : '<p class="empty">Noch keine Daten. Die Auswertung füllt sich beim Zählen.</p>';
+    var recent = allEvents().reverse().slice(0, 40);
+    $('log').innerHTML = recent.length ? recent.map(function (e) {
+      return '<li><span class="n">' + (e.num === null ? '–' : e.num) + '</span><span class="r"><span class="tag ' + (e.res === 'tor' ? 't' : 'f') + '">' + (e.res === 'tor' ? 'Tor' : 'Fehlwurf') +
+        '</span> <span class="sub">· ' + (e.num === null ? 'Gegner' : e.pos ? POSNAME[e.pos] : 'ohne Position') + ' · ' + esc(TN(e.team)) + (e.t !== undefined ? ' · ' + e.half + '. HZ ' + fmt(e.t) : '') + '</span></span>' +
+        '<button data-del="' + e.id + '" aria-label="Eintrag löschen">Löschen</button></li>';
+    }).join('') : '<li class="sub">Noch keine Einträge.</li>';
+  }
+
+  function render() {
+    var t = S.team;
+    ['setup', 'game', 'report'].forEach(function (v) { $('v-' + v).hidden = view !== v; });
+    Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function (b) { b.setAttribute('aria-selected', b.dataset.v === view); });
+
+    var sc = { H: 0, G: 0 };
+    S.events.forEach(function (e) { if (isTor(e)) sc[e.team]++; });
+    ['H', 'G'].forEach(function (t2) {
+      var r = res(t2);
+      $('score' + t2).textContent = S.mult ? r.m : r.g;
+      $('sub' + t2).textContent = r.g + ' Tore × ' + r.k + ' = ' + r.m;
+    });
+    $('wertLbl').textContent = S.mult ? 'Wertung mit Mult.' : 'Wertung ohne Mult.';
+    var isOpp = (t === S.opp);
+    $('chips').hidden = isOpp; document.querySelector('.courtbox').hidden = isOpp; $('btnGoal').parentNode.hidden = isOpp; $('btnUndo').hidden = isOpp;
+    $('oppPanel').hidden = !isOpp; $('addForm').hidden = isOpp; $('kader').hidden = isOpp; $('oppNote').hidden = !isOpp;
+    var ro = res(S.opp || 'H');
+    $('oppK').textContent = ro.k; $('kPlus').disabled = ro.k >= ro.g; $('kMinus').disabled = ro.k <= 1;
+    $('btnOppUndo').disabled = !S.oppGoals.length;
+    $('oppG').textContent = TN('G') + ': nur Tore zählen'; $('oppH').textContent = TN('H') + ': nur Tore zählen';
+    $('oppG').setAttribute('aria-pressed', S.opp === 'G'); $('oppH').setAttribute('aria-pressed', S.opp === 'H'); $('oppN').setAttribute('aria-pressed', S.opp === '');
+    $('lblH').textContent = TN('H'); $('lblG').textContent = TN('G');
+    $('teamH').setAttribute('aria-pressed', t === 'H'); $('teamG').setAttribute('aria-pressed', t === 'G');
+
+    var roster = S.roster[t].slice().sort(function (a, b) { return a - b; });
+    $('chips').innerHTML = roster.length ? roster.map(function (n) {
+      return '<button class="chip" data-n="' + n + '" aria-pressed="' + (sel === n) + '">' + n + '</button>';
+    }).join('') : '<p class="empty" style="grid-column:1/-1">Kein Kader. Im Reiter Einrichtung Spieler anlegen.</p>';
+    renderZones();
+
+    $('segH').textContent = TN('H'); $('segG').textContent = TN('G');
+    $('wMit').setAttribute('aria-pressed', S.mult); $('wOhne').setAttribute('aria-pressed', !S.mult);
+    $('segH').setAttribute('aria-pressed', t === 'H'); $('segG').setAttribute('aria-pressed', t === 'G');
+    $('kader').innerHTML = roster.length ? roster.map(function (n) {
+      return '<div class="krow"><b>' + n + '</b><input data-nm="' + n + '" value="' + esc(nm(t, n)) + '" placeholder="Name" maxlength="40" aria-label="Name zu Nr. ' + n + '"><button data-rm="' + n + '">Entfernen</button></div>';
+    }).join('') : '<p class="empty">Noch kein Kader für ' + esc(TN(t)) + '. Oben Nummer und Name eintragen.</p>';
+    $('btnReset').textContent = resetArmed ? 'Wirklich alle Würfe löschen?' : 'Neues Spiel (Würfe und Uhr zurücksetzen)';
+
+    renderTimer();
+    renderReport();
+  }
+
+  function setView(v) { view = v; render(); window.scrollTo(0, 0); wake(); }
+  function wake() {
+    try {
+      if (view === 'game' && !document.hidden && navigator.wakeLock && !(wl && !wl.released)) {
+        navigator.wakeLock.request('screen').then(function (l) { wl = l; }, function () {});
+      }
+    } catch (e) {}
+  }
+  document.addEventListener('visibilitychange', wake);
+
+  function record(res) {
+    if (sel === null) { say('Bitte zuerst eine Nummer wählen.'); return; }
+    S.events.push({ id: Date.now() + Math.random(), team: S.team, num: sel, res: res, pos: pos, half: S.timer.half, t: elapsed() });
+    say('Nr. ' + sel + ' · ' + (res === 'tor' ? 'Tor' : 'Fehlwurf') + ' · ' + (pos ? POSNAME[pos] : 'ohne Position'));
+    pos = null; save(); render();
+  }
+
+  /* Ereignisse */
+  Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function (b) { b.onclick = function () { setView(b.dataset.v); }; });
+  $('btnToGame').onclick = function () { setView('game'); };
+  $('tnH').value = S.teamNames.H; $('tnG').value = S.teamNames.G;
+  $('tnH').oninput = function () { S.teamNames.H = $('tnH').value.trim() || 'Heim'; save(); render(); };
+  $('tnG').oninput = function () { S.teamNames.G = $('tnG').value.trim() || 'Gast'; save(); render(); };
+  $('lenIn').value = S.timer.len;
+  $('wMit').onclick = function () { S.mult = true; save(); render(); };
+  $('wOhne').onclick = function () { S.mult = false; save(); render(); };
+  function setOpp(v) { S.opp = v; sel = null; save(); render(); }
+  $('oppG').onclick = function () { setOpp('G'); };
+  $('oppH').onclick = function () { setOpp('H'); };
+  $('oppN').onclick = function () { setOpp(''); };
+  $('btnOppGoal').onclick = function () {
+    S.oppGoals.push({ id: Date.now() + Math.random(), half: S.timer.half, t: elapsed() });
+    say('Tor für ' + TN(S.opp)); save(); render();
+  };
+  $('btnOppUndo').onclick = function () { if (S.oppGoals.length) { S.oppGoals.pop(); save(); render(); say('Letztes Gegnertor zurückgenommen.'); } };
+  $('kPlus').onclick = function () { var r = res(S.opp); if (r.k < r.g) { S.oppK = r.k + 1; save(); render(); } };
+  $('kMinus').onclick = function () { var r = res(S.opp); S.oppK = Math.max(0, r.k - 1); save(); render(); };
+  $('lenIn').oninput = function () {
+    var v = parseInt($('lenIn').value, 10);
+    if (v >= 1 && v <= 60) { S.timer.len = v; S.timer.alarm = false; save(); renderTimer(); }
+  };
+  function pickTeam(t) { S.team = t; sel = null; pos = null; save(); render(); }
+  $('teamH').onclick = function () { pickTeam('H'); }; $('teamG').onclick = function () { pickTeam('G'); };
+  $('segH').onclick = function () { pickTeam('H'); }; $('segG').onclick = function () { pickTeam('G'); };
+
+  $('addForm').onsubmit = function (e) {
+    e.preventDefault();
+    var v = $('numIn').value.replace(/\D/g, '');
+    if (v === '') return;
+    var n = parseInt(v, 10);
+    if (S.roster[S.team].indexOf(n) < 0) S.roster[S.team].push(n);
+    var nv = $('nameIn').value.trim();
+    if (nv) S.names[S.team][n] = nv;
+    $('numIn').value = ''; $('nameIn').value = '';
+    save(); render(); $('numIn').focus();
+  };
+  $('kader').oninput = function (e) {
+    var i = e.target.closest('[data-nm]'); if (!i) return;
+    var v = i.value.trim(), n = i.dataset.nm;
+    if (v) S.names[S.team][n] = v; else delete S.names[S.team][n];
+    save();
+  };
+  $('kader').onclick = function (e) {
+    var b = e.target.closest('[data-rm]'); if (!b) return;
+    var n = parseInt(b.dataset.rm, 10);
+    S.roster[S.team] = S.roster[S.team].filter(function (x) { return x !== n; });
+    delete S.names[S.team][n];
+    if (sel === n) sel = null;
+    save(); render();
+  };
+  $('chips').onclick = function (e) {
+    var b = e.target.closest('[data-n]'); if (!b) return;
+    var n = parseInt(b.dataset.n, 10);
+    sel = (sel === n) ? null : n; render();
+  };
+  function zoneTap(el) { var k = el.getAttribute('data-p'); pos = (pos === k) ? null : k; renderZones(); }
+  $('court').onclick = function (e) { var z = e.target.closest('.zone'); if (z) zoneTap(z); };
+  $('court').onkeydown = function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('zone')) { e.preventDefault(); zoneTap(e.target); } };
+  $('btnGoal').onclick = function () { record('tor'); };
+  $('btnMiss').onclick = function () { record('fehl'); };
+  $('btnUndo').onclick = function () { if (S.events.length) { S.events.pop(); save(); render(); say('Letzter Wurf zurückgenommen.'); } };
+  $('log').onclick = function (e) {
+    var b = e.target.closest('[data-del]'); if (!b) return;
+    var id = parseFloat(b.dataset.del);
+    S.events = S.events.filter(function (x) { return x.id !== id; });
+    S.oppGoals = S.oppGoals.filter(function (x) { return x.id !== id; });
+    save(); render();
+  };
+
+  $('btnStart').onclick = function () {
+    var T = S.timer;
+    if (T.phase === 'ready' || T.phase === 'paused') { T.startedAt = Date.now(); T.phase = 'running'; say(''); save(); render(); }
+  };
+  $('btnPause').onclick = function () {
+    var T = S.timer;
+    if (T.phase === 'running') { T.elapsed = elapsed(); T.phase = 'paused'; save(); render(); }
+  };
+  $('btnStop').onclick = function () {
+    var T = S.timer;
+    if (!stopArmed) {
+      stopArmed = true; renderTimer();
+      stopTimer = setTimeout(function () { stopArmed = false; renderTimer(); }, 4000);
+      return;
+    }
+    clearTimeout(stopTimer); stopArmed = false;
+    if (T.half === 1) { T.half = 2; T.elapsed = 0; T.phase = 'ready'; T.alarm = false; say('1. Halbzeit beendet. Die 2. Halbzeit startest du mit dem Start-Button.'); }
+    else { T.elapsed = elapsed(); T.phase = 'finished'; say('Spiel beendet. Die Auswertung findest du im Reiter Auswertung.'); }
+    save(); render();
+  };
+  setInterval(function () {
+    var T = S.timer;
+    if (T.phase !== 'running') return;
+    if (!T.alarm && elapsed() >= T.len * 60000) {
+      T.elapsed = T.len * 60000; T.phase = 'paused'; T.alarm = true; save(); render();
+      say('Halbzeitzeit erreicht. Weiter startet die Nachspielzeit, Stopp beendet die Halbzeit.');
+      try { navigator.vibrate && navigator.vibrate([300, 150, 300]); } catch (e) {}
+      return;
+    }
+    renderTimer();
+  }, 250);
+
+  $('btnReset').onclick = function () {
+    if (!resetArmed) {
+      resetArmed = true; render();
+      resetTimer = setTimeout(function () { resetArmed = false; render(); }, 4000);
+      return;
+    }
+    clearTimeout(resetTimer); resetArmed = false;
+    S.events = []; S.oppGoals = []; S.oppK = 0; S.timer = defTimer(S.timer.len); sel = null; pos = null;
+    save(); render(); say('Neues Spiel bereit.');
+  };
+
+  /* Spielbericht als PDF und Excel */
+  function browserSaver() {
+    return { save: function (r) {
+      return new Promise(function (res, rej) {
+        try {
+          var blob = new Blob([r.data]);
+          if (window.AndroidSave) {
+            var fr = new FileReader();
+            fr.onload = function () {
+              var ok = false;
+              try { ok = window.AndroidSave.save(r.filename, String(fr.result).split(',')[1]); } catch (e) {}
+              if (ok) res({ status: 'saved' }); else rej({ code: 'unavailable' });
+            };
+            fr.onerror = function () { rej({ code: 'unavailable' }); };
+            fr.readAsDataURL(blob);
+            return;
+          }
+          var a = document.createElement('a'), url = URL.createObjectURL(blob);
+          a.href = url; a.download = r.filename; document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+          res({ status: 'saved' });
+        } catch (e) { rej({ code: 'unavailable' }); }
+      });
+    } };
+  }
+  var dlCap = browserSaver(); $('dl').hidden = false;
+  try {
+    if (window.claude && window.claude.use) {
+      window.claude.use('downloads').then(function (d) { dlCap = d; $('dl').hidden = !d; }, function () {});
+    }
+  } catch (e) {}
+  function stamp() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function fname(ext) { return ('Spielbericht_' + TN('H') + '_gegen_' + TN('G') + '_' + stamp()).replace(/[^\wÄÖÜäöüß-]+/g, '_') + '.' + ext; }
+  function stat(label, name, pe) {
+    var g = cnt(pe, isTor);
+    var h1 = cnt(pe, function (e) { return isTor(e) && e.half === 1; });
+    return { nr: label, name: name, w: pe.length, g: g, f: pe.length - g, q: pe.length ? Math.round(g / pe.length * 100) : null, h1: h1, h2: g - h1,
+      pos: POS.map(function (p) { var a = pe.filter(function (e) { return e.pos === p[0]; }); return { g: cnt(a, isTor), n: a.length }; }) };
+  }
+  function teamStats(t) {
+    var te = evs(t), nums = {};
+    S.roster[t].forEach(function (n) { nums[n] = 1; });
+    te.forEach(function (e) { nums[e.num] = 1; });
+    var rows = Object.keys(nums).map(Number).filter(function (n) { return !isNaN(n); }).sort(function (a, b) { return a - b; }).map(function (n) {
+      return stat(n, nm(t, n), te.filter(function (e) { return e.num === n; }));
+    });
+    return { rows: rows, total: stat('Gesamt', '', te) };
+  }
+  function protocol() {
+    return allEvents().map(function (e) {
+      return [TN(e.team), e.num === null ? '' : e.num, e.num === null ? '' : nm(e.team, e.num), e.res === 'tor' ? 'Tor' : 'Fehlwurf', e.pos ? POSNAME[e.pos] : '', (e.half || '') + (e.half ? '. HZ' : ''), e.t !== undefined ? fmt(e.t) : ''];
+    });
+  }
+  function buildXlsx() {
+    var X = window.XLSX, wb = X.utils.book_new();
+    var ov = [['Spielbericht'], ['Datum', new Date().toLocaleDateString('de-DE')], ['Halbzeitlänge (Min.)', S.timer.len], ['Gewertet', S.mult ? 'mit Multiplikator' : 'ohne Multiplikator'], ['Erstellt mit', 'GoalTracker ' + VERSION], [], ['Mannschaft', 'Tore gesamt', 'Tore 1. HZ', 'Tore 2. HZ', 'Fehlwürfe', 'Torschützen', 'Wertung mit Multiplikator']];
+    ['H', 'G'].forEach(function (t) { var s = teamStats(t).total; ov.push([TN(t), s.g, s.h1, s.h2, s.f, res(t).k, res(t).m]); });
+    var w0 = X.utils.aoa_to_sheet(ov); w0['!cols'] = [{ wch: 24 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 26 }];
+    X.utils.book_append_sheet(wb, w0, 'Übersicht');
+    var head = ['Nr.', 'Name', 'Würfe', 'Tore', 'Fehlwürfe', 'Quote %', 'Tore 1. HZ', 'Tore 2. HZ'];
+    POS.forEach(function (p) { head.push(p[1] + ' Tore', p[1] + ' Würfe'); });
+    [['H', 'Spieler Heim'], ['G', 'Spieler Gast']].forEach(function (x) {
+      var ts = teamStats(x[0]);
+      var rows = ts.rows.concat([ts.total]).map(function (s) {
+        var r = [s.nr, s.name, s.w, s.g, s.f, s.q === null ? '' : s.q, s.h1, s.h2];
+        s.pos.forEach(function (p) { r.push(p.g, p.n); });
+        return r;
+      });
+      var ws = X.utils.aoa_to_sheet([head].concat(rows));
+      ws['!cols'] = head.map(function (h, i) { return { wch: i === 1 ? 22 : 11 }; });
+      X.utils.book_append_sheet(wb, ws, x[1]);
+    });
+    var wp = X.utils.aoa_to_sheet([['Mannschaft', 'Nr.', 'Name', 'Ergebnis', 'Position', 'Halbzeit', 'Spielzeit']].concat(protocol()));
+    wp['!cols'] = [{ wch: 18 }, { wch: 6 }, { wch: 22 }, { wch: 11 }, { wch: 12 }, { wch: 10 }, { wch: 10 }];
+    X.utils.book_append_sheet(wb, wp, 'Wurfprotokoll');
+    return X.write(wb, { bookType: 'xlsx', type: 'array' });
+  }
+  function buildPdf() {
+    var doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    var sH = teamStats('H').total, sG = teamStats('G').total;
+    doc.setFontSize(20); doc.text('Spielbericht', 14, 16);
+    doc.setFontSize(9); doc.text('GoalTracker ' + VERSION, 283, 16, { align: 'right' });
+    var rH = res('H'), rG = res('G');
+    doc.setFontSize(14); doc.text(TN('H') + ' - ' + TN('G'), 14, 25);
+    doc.setFontSize(11);
+    doc.text('Ohne Multiplikator: ' + rH.g + ' : ' + rG.g + (S.mult ? '' : '   (gewertet)'), 14, 32);
+    doc.text('Mit Multiplikator: ' + rH.m + ' : ' + rG.m + '  (' + rH.g + 'x' + rH.k + ' : ' + rG.g + 'x' + rG.k + ')' + (S.mult ? '   (gewertet)' : ''), 14, 38);
+    doc.setFontSize(10);
+    doc.text('Datum: ' + new Date().toLocaleDateString('de-DE') + '   Halbzeitlänge: ' + S.timer.len + ' Min.   Halbzeitstände: 1. HZ ' + sH.h1 + ':' + sG.h1 + ', 2. HZ ' + sH.h2 + ':' + sG.h2, 14, 45);
+    var head = [['Nr.', 'Name', 'Würfe', 'Tore', 'Fehl', 'Quote', '1. HZ', '2. HZ'].concat(POS.map(function (p) { return p[1]; }))];
+    var y = 54;
+    ['H', 'G'].forEach(function (t) {
+      var ts = teamStats(t);
+      if (!ts.rows.length) return;
+      if (y > 150) { doc.addPage(); y = 16; }
+      doc.setFontSize(13); doc.text(TN(t) + ' · ' + ts.total.g + ' Tore, ' + res(t).k + ' Torschützen, Wertung ' + res(t).m, 14, y);
+      var body = ts.rows.concat([ts.total]).map(function (s) {
+        return [s.nr, s.name, s.w, s.g, s.f, s.q === null ? '-' : s.q + ' %', s.h1, s.h2].concat(s.pos.map(function (p) { return p.n ? p.g + '/' + p.n : '-'; }));
+      });
+      doc.autoTable({ startY: y + 3, head: head, body: body, styles: { fontSize: 9, halign: 'center' }, columnStyles: { 1: { halign: 'left' } },
+        headStyles: { fillColor: [12, 107, 79] },
+        didParseCell: function (d) { if (d.section === 'body' && d.row.index === body.length - 1) d.cell.styles.fontStyle = 'bold'; } });
+      y = doc.lastAutoTable.finalY + 10;
+    });
+    doc.addPage();
+    doc.setFontSize(14); doc.text('Wurfprotokoll', 14, 16);
+    doc.autoTable({ startY: 20, head: [['Mannschaft', 'Nr.', 'Name', 'Ergebnis', 'Position', 'Halbzeit', 'Spielzeit']], body: protocol(), styles: { fontSize: 9 }, headStyles: { fillColor: [12, 107, 79] } });
+    return doc.output('arraybuffer');
+  }
+  function offer(ext, build) {
+    if (!dlCap) { say('Speichern ist in dieser Ansicht nicht verfügbar.'); return; }
+    var data;
+    try { data = build(); } catch (e) { say('Der Bericht konnte nicht erstellt werden.'); return; }
+    dlCap.save({ filename: fname(ext), data: data }).then(
+      function () { say('Spielbericht gespeichert.'); },
+      function (e) { say(e && e.code === 'declined' ? 'Speichern abgebrochen.' : 'Speichern nicht möglich.'); }
+    );
+  }
+  $('btnPdf').onclick = function () { if (!window.jspdf || !window.jspdf.jsPDF) { say('PDF-Baustein nicht geladen. Bitte Seite neu laden.'); return; } offer('pdf', buildPdf); };
+  $('btnXlsx').onclick = function () { if (!window.XLSX) { say('Excel-Baustein nicht geladen. Bitte Seite neu laden.'); return; } offer('xlsx', buildXlsx); };
+
+  $('btnCopy').onclick = function () {
+    var out = [];
+    ['H', 'G'].forEach(function (t) {
+      var te = evs(t), g = cnt(te, isTor);
+      out.push(TN(t) + ': ' + g + ' Tore, ' + (te.length - g) + ' Fehlwürfe');
+      var h1 = cnt(te, function (e) { return isTor(e) && e.half === 1; });
+      out.push('  1. Halbzeit: ' + h1 + ' Tore, 2. Halbzeit: ' + (g - h1) + ' Tore');
+      var nums = {}; te.forEach(function (e) { nums[e.num] = 1; });
+      Object.keys(nums).map(Number).filter(function (n) { return !isNaN(n); }).sort(function (a, b) { return a - b; }).forEach(function (n) {
+        var pe = te.filter(function (e) { return e.num === n; });
+        var pg = cnt(pe, isTor);
+        var d = POS.map(function (p) {
+          var a = pe.filter(function (e) { return e.pos === p[0]; });
+          return a.length ? POSNAME[p[0]] + ' ' + cnt(a, isTor) + '/' + a.length : null;
+        }).filter(Boolean).join(', ');
+        out.push('  Nr. ' + n + (nm(t, n) ? ' ' + nm(t, n) : '') + ': ' + pg + ' Tore, ' + (pe.length - pg) + ' Fehl' + (d ? ' (' + d + ')' : ''));
+      });
+    });
+    var rh = res('H'), rg = res('G');
+    out.unshift(TN('H') + ' : ' + TN('G'), 'Ohne Multiplikator: ' + rh.g + ' : ' + rg.g, 'Mit Multiplikator: ' + rh.m + ' : ' + rg.m + ' (' + rh.g + '×' + rh.k + ' : ' + rg.g + '×' + rg.k + ')', 'Gewertet: ' + (S.mult ? 'mit' : 'ohne') + ' Multiplikator', '');
+    var txt = out.join('\n');
+    try { navigator.clipboard.writeText(txt).then(function () { say('Ergebnis kopiert.'); }, function () { say('Kopieren nicht möglich.'); }); }
+    catch (e) { say('Kopieren nicht möglich.'); }
+  };
+
+  render(); wake();
+})();
+</script>
+<script>if('serviceWorker' in navigator && /^https?:/.test(location.protocol)){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
+</body></html>
