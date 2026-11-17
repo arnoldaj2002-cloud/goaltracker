@@ -1,7 +1,7 @@
 {
     "description":  "Torzähler für Jugend-Handball",
     "short_name":  "GoalTracker",
-    "background_color":  "#f1f4f2",
+    "background_color":  "#0f1613",
     "icons":  [
                   {
                       "purpose":  "any",
