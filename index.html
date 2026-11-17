@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0c6b4f"><meta name="application-name" content="GoalTracker"><meta name="version" content="1.0.9"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GoalTracker"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0c6b4f"><meta name="application-name" content="GoalTracker"><meta name="version" content="1.1.0"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GoalTracker"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Torzähler Handball</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
@@ -133,6 +133,11 @@ h2:first-child { margin-top: 12px; }
 .act { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .act button { min-height: 72px; font-family: var(--font-display); font-weight: 700; font-size: 32px; letter-spacing: .04em; text-transform: uppercase; }
 .act button:active { transform: scale(.98); }
+#missPanel { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: var(--surface); border: 2px solid var(--miss); border-radius: 12px; padding: 10px; }
+#missPanel[hidden] { display: none; }
+#missPanel strong { grid-column: 1 / -1; }
+#missPanel button { min-height: 54px; font-size: 16px; font-weight: 600; }
+#missPanel .wide { grid-column: 1 / -1; }
 .status { min-height: 22px; margin: 0; color: var(--muted); font-size: 15px; text-align: center; }
 
 /* Einrichtung */
@@ -197,7 +202,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
         <li><b>Einrichtung:</b> Namen der eigenen Mannschaft (Heim) und des Gegners (Gast) eintragen. Halbzeitlänge prüfen.</li>
         <li><b>Kader:</b> Trikotnummer und Vorname eingeben, auf „Hinzufügen“ tippen. Für jeden Spieler wiederholen.</li>
         <li><b>Zum Spiel</b> tippen. Mit „Start“ läuft die Uhr.</li>
-        <li><b>Nach jedem Wurf:</b> Nummer antippen, Wurfposition am Spielfeld antippen, dann „Tor“ oder „Fehlwurf“.</li>
+        <li><b>Nach jedem Wurf:</b> Nummer antippen, Wurfposition am Spielfeld antippen, dann „Tor“ oder „Fehlwurf“. Bei „Fehlwurf“ wählst du noch die Art: Latte, Pfosten links/rechts, Drüber, Links/Rechts vorbei oder Torwart gehalten (links und rechts jeweils mit Blick aufs Tor). „Ohne Angabe“ geht auch.</li>
         <li><b>Am Ende:</b> „Stopp“ zweimal tippen. Das Spiel wird gespeichert. Die Auswertung steht im Reiter „Auswertung“. Wenn alles stimmt, tippst du zweimal auf „Spiel abschließen“. Dann beginnt ein neues Spiel, das alte bleibt in „Meine Spiele“ (dort mit „Bearbeiten“ korrigierbar).</li>
       </ol>
     </details>
@@ -416,6 +421,14 @@ tr.total td { font-weight: 700; background: var(--bg); }
       <button class="goal" id="btnGoal">Tor</button>
       <button class="miss" id="btnMiss">Fehlwurf</button>
     </div>
+    <div id="missPanel" hidden>
+      <strong>Was für ein Fehlwurf? (Blick aufs Tor)</strong>
+      <button data-m="LA">Latte</button><button data-m="UE">Drüber</button>
+      <button data-m="PL">Pfosten links</button><button data-m="PR">Pfosten rechts</button>
+      <button data-m="VL">Links vorbei</button><button data-m="VR">Rechts vorbei</button>
+      <button data-m="TW" class="wide">Torwart gehalten</button>
+      <button data-m="">Ohne Angabe</button><button id="missCancel">Abbrechen</button>
+    </div>
     <p class="status" id="status" aria-live="polite"></p>
     <button id="btnUndo">Letzten Wurf zurücknehmen</button>
     <button id="btnHelpGame">Anleitung</button>
@@ -444,6 +457,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
         <div id="evPlayer" style="display:grid;gap:8px">
           <label>Spieler-Nr.<select class="txt" id="evNum"></select></label>
           <label>Ergebnis<select class="txt" id="evRes"><option value="tor">Tor</option><option value="fehl">Fehlwurf</option></select></label>
+          <label id="evMissL">Art des Fehlwurfs<select class="txt" id="evMiss"><option value="">ohne Angabe</option></select></label>
           <label>Position<select class="txt" id="evPos"><option value="">ohne Position</option></select></label>
         </div>
         <label>Halbzeit<select class="txt" id="evHalf"><option value="1">1. Halbzeit</option><option value="2">2. Halbzeit</option></select></label>
@@ -458,9 +472,11 @@ tr.total td { font-weight: 700; background: var(--bg); }
 <script>
 (function () {
   var POS = [['L','Links'],['HL','Halblinks'],['M','Mitte'],['HR','Halbrechts'],['R','Rechts']];
+  var MISS = [['LA','Latte','Latte'],['PL','Pfosten links','Pf. li.'],['PR','Pfosten rechts','Pf. re.'],['UE','Drüber','Drüber'],['VL','Links vorbei','Li. vorbei'],['VR','Rechts vorbei','Re. vorbei'],['TW','Torwart gehalten','TW']];
+  var MISSNAME = {}; MISS.forEach(function (m) { MISSNAME[m[0]] = m[1]; });
   var POSNAME = {L:'Links',HL:'Halblinks',M:'Mitte',HR:'Halbrechts',R:'Rechts'};
   var KEY = 'torzaehler-v1';
-  var VERSION = '1.0.9', VERSION_DATE = '15.11.2026';
+  var VERSION = '1.1.0', VERSION_DATE = '15.11.2026';
   var FB_CONFIG = {"apiKey":"AIzaSyCfTNJIWwUvcZCbFzW39auRzkgU_9MoGVY","authDomain":"goaltracker-b0bd2.firebaseapp.com","databaseURL":"https://goaltracker-b0bd2-default-rtdb.europe-west1.firebasedatabase.app","projectId":"goaltracker-b0bd2","storageBucket":"goaltracker-b0bd2.firebasestorage.app","messagingSenderId":"466673267446","appId":"1:466673267446:web:512afb5f483f9a7a2f72d7"};
   document.getElementById('ver').textContent = 'GoalTracker · Version ' + VERSION + ' · ' + VERSION_DATE;
   var $ = function (id) { return document.getElementById(id); };
@@ -491,6 +507,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
   function allEvents() { return S.events.concat(oppPseudo()).sort(function (a, b) { return a.id - b.id; }); }
   function evs(t) { return allEvents().filter(function (e) { return e.team === t; }); }
   function isTor(e) { return e.res === 'tor'; }
+  function tagText(e) { return e.res === 'tor' ? 'Tor' : 'Fehlwurf' + (e.miss && MISSNAME[e.miss] ? ' · ' + MISSNAME[e.miss] : ''); }
   function cnt(a, f) { return a.filter(f).length; }
   function res(t) {
     var te = evs(t), seen = {};
@@ -558,6 +575,18 @@ tr.total td { font-weight: 700; background: var(--bg); }
         return '<td>' + (a.length ? cnt(a, isTor) + '/' + a.length : '<span class="sub">·</span>') + '</td>';
       }).join('') + '</tr>';
   }
+  function missHtml(t, te) {
+    if (!cnt(te, function (e) { return !isTor(e); })) return '';
+    var nums = {}; te.forEach(function (e) { nums[e.num] = 1; });
+    var list = Object.keys(nums).map(Number).filter(function (n) { return !isNaN(n); }).sort(function (a, b) { return a - b; });
+    function r(cls, label, name, pe) {
+      var st = stat(label, name, pe);
+      return '<tr class="' + cls + '"><td class="nr">' + label + '</td><td class="nm nmcol">' + esc(name) + '</td><td>' + st.f + '</td>' + st.miss.map(function (c) { return '<td>' + (c || '<span class="sub">·</span>') + '</td>'; }).join('') + '<td>' + (st.missNone || '<span class="sub">·</span>') + '</td></tr>';
+    }
+    var head = '<thead><tr><th>Nr.</th><th class="nmcol" style="text-align:left">Name</th><th>Fehl</th>' + MISS.map(function (m) { return '<th>' + m[2] + '</th>'; }).join('') + '<th>o. A.</th></tr></thead>';
+    var rows = list.map(function (n) { return r('', n, nm(t, n), te.filter(function (e) { return e.num === n; })); }).join('') + r('total', 'Σ', 'Mannschaft', te);
+    return '<p class="sub" style="margin:10px 0 4px">Fehlwürfe nach Art · ' + esc(TN(t)) + '</p><div class="tablewrap"><table>' + head + '<tbody>' + rows + '</tbody></table></div>';
+  }
   function oppBlock(t) {
     var r = res(t), te = evs(t);
     var h1 = cnt(te, function (e) { return isTor(e) && e.half === 1; });
@@ -586,12 +615,12 @@ tr.total td { font-weight: 700; background: var(--bg); }
       if (t === S.opp) return oppBlock(t);
       if (!list.length) return '';
       var rows = list.map(function (n) { return row('', n, nm(t, n), te.filter(function (e) { return e.num === n; })); }).join('') + row('total', 'Σ', 'Mannschaft', te);
-      return '<h3><span>' + esc(TN(t)) + '</span><span>' + res(t).g + ' Tore · ×' + res(t).k + ' = ' + res(t).m + '</span></h3><div class="tablewrap"><table>' + head + '<tbody>' + rows + '</tbody></table></div>';
+      return '<h3><span>' + esc(TN(t)) + '</span><span>' + res(t).g + ' Tore · ×' + res(t).k + ' = ' + res(t).m + '</span></h3><div class="tablewrap"><table>' + head + '<tbody>' + rows + '</tbody></table></div>' + missHtml(t, te);
     }).join('');
     $('report').innerHTML = html ? summaryHtml() + html : '<p class="empty">Noch keine Daten. Die Auswertung füllt sich beim Zählen.</p>';
     var recent = allEvents().reverse().slice(0, 200);
     $('log').innerHTML = recent.length ? recent.map(function (e) {
-      return '<li><span class="n">' + (e.num === null ? '–' : e.num) + '</span><span class="r"><span class="tag ' + (e.res === 'tor' ? 't' : 'f') + '">' + (e.res === 'tor' ? 'Tor' : 'Fehlwurf') +
+      return '<li><span class="n">' + (e.num === null ? '–' : e.num) + '</span><span class="r"><span class="tag ' + (e.res === 'tor' ? 't' : 'f') + '">' + esc(tagText(e)) +
         '</span> <span class="sub">· ' + (e.num === null ? 'Gegner' : e.pos ? POSNAME[e.pos] : 'ohne Position') + ' · ' + esc(TN(e.team)) + (e.t !== undefined ? ' · ' + e.half + '. HZ ' + fmt(e.t) : '') + '</span></span>' +
         '<button data-edit="' + e.id + '" aria-label="Eintrag ändern">Ändern</button><button data-del="' + e.id + '" aria-label="Eintrag löschen">Löschen</button></li>';
     }).join('') : '<li class="sub">Noch keine Einträge.</li>';
@@ -668,11 +697,12 @@ tr.total td { font-weight: 700; background: var(--bg); }
     if (ph === 'finished') { say('Das Spiel ist beendet. Für ein neues Spiel auf „Neues Spiel“ tippen.'); return true; }
     return false;
   }
-  function record(res) {
+  function record(res, miss) {
     if (notRunning()) return;
     if (sel === null) { say('Bitte zuerst eine Nummer wählen.'); return; }
-    S.events.push({ id: Date.now() + Math.random(), team: S.team, num: sel, res: res, pos: pos, half: S.timer.half, t: elapsed() });
-    say('Nr. ' + sel + ' · ' + (res === 'tor' ? 'Tor' : 'Fehlwurf') + ' · ' + (pos ? POSNAME[pos] : 'ohne Position'));
+    $('missPanel').hidden = true;
+    S.events.push({ id: Date.now() + Math.random(), team: S.team, num: sel, res: res, pos: pos, miss: res === 'fehl' ? (miss || null) : null, half: S.timer.half, t: elapsed() });
+    say('Nr. ' + sel + ' · ' + (res === 'tor' ? 'Tor' : 'Fehlwurf' + (miss ? ' (' + MISSNAME[miss] + ')' : '')) + ' · ' + (pos ? POSNAME[pos] : 'ohne Position'));
     pos = null; save(); render();
   }
 
@@ -739,7 +769,12 @@ tr.total td { font-weight: 700; background: var(--bg); }
   $('court').onclick = function (e) { var z = e.target.closest('.zone'); if (z) zoneTap(z); };
   $('court').onkeydown = function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('zone')) { e.preventDefault(); zoneTap(e.target); } };
   $('btnGoal').onclick = function () { record('tor'); };
-  $('btnMiss').onclick = function () { record('fehl'); };
+  $('missPanel').onclick = function (e) { var b = e.target.closest('button'); if (!b) return; if (b.id === 'missCancel') { $('missPanel').hidden = true; return; } record('fehl', b.dataset.m || null); };
+  $('btnMiss').onclick = function () {
+    if (notRunning()) return;
+    if (sel === null) { say('Bitte zuerst eine Nummer wählen.'); return; }
+    $('missPanel').hidden = false; $('missPanel').scrollIntoView({ block: 'nearest' });
+  };
   $('btnUndo').onclick = function () { if (S.events.length) { S.events.pop(); save(); render(); say('Letzter Wurf zurückgenommen.'); } };
   $('log').onclick = function (e) {
     var ed = e.target.closest('[data-edit]'); if (ed) { evOpen(parseFloat(ed.dataset.edit)); return; }
@@ -767,16 +802,20 @@ tr.total td { font-weight: 700; background: var(--bg); }
     if (id !== null) { e = S.events.filter(function (x) { return x.id === id; })[0] || null; og = S.oppGoals.filter(function (x) { return x.id === id; })[0] || null; }
     $('evTeam').innerHTML = '<option value="H">' + esc(TN('H')) + '</option><option value="G">' + esc(TN('G')) + '</option>';
     $('evPos').innerHTML = '<option value="">ohne Position</option>' + POS.map(function (p) { return '<option value="' + p[0] + '">' + p[1] + '</option>'; }).join('');
+    $('evMiss').innerHTML = '<option value="">ohne Angabe</option>' + MISS.map(function (m) { return '<option value="' + m[0] + '">' + m[1] + '</option>'; }).join('');
     $('evTeam').value = e ? e.team : og ? S.opp : (S.team || 'H');
     $('evTeam').disabled = id !== null;
     $('evTitle').textContent = id === null ? 'Wurf nachtragen' : 'Eintrag ändern';
     evSync();
-    if (e) { $('evNum').value = e.num; $('evRes').value = e.res; $('evPos').value = e.pos || ''; }
-    else { $('evRes').value = 'tor'; $('evPos').value = ''; }
+    if (e) { $('evNum').value = e.num; $('evRes').value = e.res; $('evPos').value = e.pos || ''; $('evMiss').value = e.miss || ''; }
+    else { $('evRes').value = 'tor'; $('evPos').value = ''; $('evMiss').value = ''; }
+    evMissVis();
     $('evHalf').value = String((e || og || { half: S.timer.half }).half || 1);
     $('evForm').hidden = false; $('evAddBtn').hidden = true;
     $('evForm').scrollIntoView({ block: 'nearest' });
   }
+  function evMissVis() { $('evMissL').style.display = $('evRes').value === 'fehl' ? 'grid' : 'none'; }
+  $('evRes').onchange = evMissVis;
   function evClose() { $('evForm').hidden = true; $('evAddBtn').hidden = false; evEditId = null; }
   $('evAddBtn').onclick = function () { evOpen(null); };
   $('evCancel').onclick = evClose;
@@ -790,14 +829,14 @@ tr.total td { font-weight: 700; background: var(--bg); }
       if (og) og.half = half;
       else if (e) {
         if ($('evNum').value === '') { say('Bitte eine Spielernummer wählen.'); return; }
-        e.num = parseInt($('evNum').value, 10); e.res = $('evRes').value; e.pos = $('evPos').value || null; e.half = half;
+        e.num = parseInt($('evNum').value, 10); e.res = $('evRes').value; e.pos = $('evPos').value || null; e.miss = e.res === 'fehl' ? ($('evMiss').value || null) : null; e.half = half;
       }
     } else {
       var tm = half === S.timer.half ? elapsed() : S.timer.len * 60000, id = Date.now() + Math.random();
       if (t === S.opp) S.oppGoals.push({ id: id, half: half, t: tm });
       else {
         if ($('evNum').value === '') { say('Bitte eine Spielernummer wählen (Kader in der Einrichtung ergänzen).'); return; }
-        S.events.push({ id: id, team: t, num: parseInt($('evNum').value, 10), res: $('evRes').value, pos: $('evPos').value || null, half: half, t: tm });
+        S.events.push({ id: id, team: t, num: parseInt($('evNum').value, 10), res: $('evRes').value, pos: $('evPos').value || null, miss: $('evRes').value === 'fehl' ? ($('evMiss').value || null) : null, half: half, t: tm });
       }
     }
     evClose();
@@ -902,7 +941,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
   function snapshot(offset) {
     var T = S.timer;
     return {
-      events: S.events.map(function (e) { return { id: e.id, team: e.team, num: e.num, res: e.res, pos: e.pos || '', half: e.half || 1, t: e.t || 0 }; }),
+      events: S.events.map(function (e) { return { id: e.id, team: e.team, num: e.num, res: e.res, pos: e.pos || '', miss: e.miss || '', half: e.half || 1, t: e.t || 0 }; }),
       oppGoals: (S.oppGoals || []).map(function (g) { return { id: g.id, half: g.half || 1, t: g.t || 0 }; }),
       roster: { H: S.roster.H, G: S.roster.G },
       names: liveNameMap(),
@@ -916,7 +955,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
     return {
       team: viewTeam, roster: { H: arr(r.H), G: arr(r.G) }, names: readNames(v.names),
       teamNames: v.teamNames || { H: 'Heim', G: 'Gast' },
-      events: arr(v.events).map(function (e) { return { id: e.id, team: e.team, num: e.num, res: e.res, pos: e.pos || null, half: e.half, t: e.t }; }),
+      events: arr(v.events).map(function (e) { return { id: e.id, team: e.team, num: e.num, res: e.res, pos: e.pos || null, miss: e.miss || null, half: e.half, t: e.t }; }),
       oppGoals: arr(v.oppGoals), mult: v.mult !== false, opp: v.opp === undefined ? '' : v.opp, oppK: v.oppK || 0,
       timer: { len: T.len || 10, half: T.half || 1, phase: T.phase || 'ready', elapsed: T.elapsed || 0, startedAt: T.startedAt || 0, alarm: !!T.alarm }
     };
@@ -1050,7 +1089,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
     }).join('') : '<p class="empty" style="grid-column:1/-1">Noch keine Spieler.</p>');
     var recent = allEvents().reverse().slice(0, 12);
     $('wlog').innerHTML = recent.length ? recent.map(function (e) {
-      return '<li><span class="n">' + (e.num === null ? '–' : e.num) + (e.num !== null && nm(e.team, e.num) ? '<small class="pn">' + esc(nm(e.team, e.num)) + '</small>' : '') + '</span><span class="r"><span class="tag ' + (e.res === 'tor' ? 't' : 'f') + '">' + (e.res === 'tor' ? 'Tor' : 'Fehlwurf') + '</span> <span class="sub">· ' + (e.num === null ? 'Gegner' : e.pos ? POSNAME[e.pos] : 'ohne Position') + ' · ' + esc(TN(e.team)) + (e.t !== undefined ? ' · ' + e.half + '. HZ ' + fmt(e.t) : '') + '</span></span></li>';
+      return '<li><span class="n">' + (e.num === null ? '–' : e.num) + (e.num !== null && nm(e.team, e.num) ? '<small class="pn">' + esc(nm(e.team, e.num)) + '</small>' : '') + '</span><span class="r"><span class="tag ' + (e.res === 'tor' ? 't' : 'f') + '">' + esc(tagText(e)) + '</span> <span class="sub">· ' + (e.num === null ? 'Gegner' : e.pos ? POSNAME[e.pos] : 'ohne Position') + ' · ' + esc(TN(e.team)) + (e.t !== undefined ? ' · ' + e.half + '. HZ ' + fmt(e.t) : '') + '</span></span></li>';
     }).join('') : '<li class="sub">Noch keine Würfe.</li>';
   }
   function renderExtras() {
@@ -1258,7 +1297,8 @@ tr.total td { font-weight: 700; background: var(--bg); }
     var g = cnt(pe, isTor);
     var h1 = cnt(pe, function (e) { return isTor(e) && e.half === 1; });
     return { nr: label, name: name, w: pe.length, g: g, f: pe.length - g, q: pe.length ? Math.round(g / pe.length * 100) : null, h1: h1, h2: g - h1,
-      pos: POS.map(function (p) { var a = pe.filter(function (e) { return e.pos === p[0]; }); return { g: cnt(a, isTor), n: a.length }; }) };
+      pos: POS.map(function (p) { var a = pe.filter(function (e) { return e.pos === p[0]; }); return { g: cnt(a, isTor), n: a.length }; }),
+      miss: MISS.map(function (m) { return cnt(pe, function (e) { return !isTor(e) && e.miss === m[0]; }); }), missNone: cnt(pe, function (e) { return !isTor(e) && !(e.miss && MISSNAME[e.miss]); }) };
   }
   function teamStats(t) {
     var te = evs(t), nums = {};
@@ -1271,7 +1311,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
   }
   function protocol() {
     return allEvents().map(function (e) {
-      return [TN(e.team), e.num === null ? '' : e.num, e.num === null ? '' : nm(e.team, e.num), e.res === 'tor' ? 'Tor' : 'Fehlwurf', e.pos ? POSNAME[e.pos] : '', (e.half || '') + (e.half ? '. HZ' : ''), e.t !== undefined ? fmt(e.t) : ''];
+      return [TN(e.team), e.num === null ? '' : e.num, e.num === null ? '' : nm(e.team, e.num), e.res === 'tor' ? 'Tor' : 'Fehlwurf', e.res === 'tor' ? '' : (MISSNAME[e.miss] || ''), e.pos ? POSNAME[e.pos] : '', (e.half || '') + (e.half ? '. HZ' : ''), e.t !== undefined ? fmt(e.t) : ''];
     });
   }
   function buildXlsx() {
@@ -1282,19 +1322,21 @@ tr.total td { font-weight: 700; background: var(--bg); }
     X.utils.book_append_sheet(wb, w0, 'Übersicht');
     var head = ['Nr.', 'Name', 'Würfe', 'Tore', 'Fehlwürfe', 'Quote %', 'Tore 1. HZ', 'Tore 2. HZ'];
     POS.forEach(function (p) { head.push(p[1] + ' Tore', p[1] + ' Würfe'); });
+    MISS.forEach(function (m) { head.push('Fehl: ' + m[1]); }); head.push('Fehl: ohne Angabe');
     [['H', 'Spieler Heim'], ['G', 'Spieler Gast']].forEach(function (x) {
       var ts = teamStats(x[0]);
       var rows = ts.rows.concat([ts.total]).map(function (s) {
         var r = [s.nr, s.name, s.w, s.g, s.f, s.q === null ? '' : s.q, s.h1, s.h2];
         s.pos.forEach(function (p) { r.push(p.g, p.n); });
+        s.miss.forEach(function (c) { r.push(c); }); r.push(s.missNone);
         return r;
       });
       var ws = X.utils.aoa_to_sheet([head].concat(rows));
       ws['!cols'] = head.map(function (h, i) { return { wch: i === 1 ? 22 : 11 }; });
       X.utils.book_append_sheet(wb, ws, x[1]);
     });
-    var wp = X.utils.aoa_to_sheet([['Mannschaft', 'Nr.', 'Name', 'Ergebnis', 'Position', 'Halbzeit', 'Spielzeit']].concat(protocol()));
-    wp['!cols'] = [{ wch: 18 }, { wch: 6 }, { wch: 22 }, { wch: 11 }, { wch: 12 }, { wch: 10 }, { wch: 10 }];
+    var wp = X.utils.aoa_to_sheet([['Mannschaft', 'Nr.', 'Name', 'Ergebnis', 'Art des Fehlwurfs', 'Position', 'Halbzeit', 'Spielzeit']].concat(protocol()));
+    wp['!cols'] = [{ wch: 18 }, { wch: 6 }, { wch: 22 }, { wch: 11 }, { wch: 18 }, { wch: 12 }, { wch: 10 }, { wch: 10 }];
     X.utils.book_append_sheet(wb, wp, 'Wurfprotokoll');
     return X.write(wb, { bookType: 'xlsx', type: 'array' });
   }
@@ -1323,11 +1365,19 @@ tr.total td { font-weight: 700; background: var(--bg); }
       doc.autoTable({ startY: y + 3, head: head, body: body, styles: { fontSize: 9, halign: 'center' }, columnStyles: { 1: { halign: 'left' } },
         headStyles: { fillColor: [12, 107, 79] },
         didParseCell: function (d) { if (d.section === 'body' && d.row.index === body.length - 1) d.cell.styles.fontStyle = 'bold'; } });
-      y = doc.lastAutoTable.finalY + 10;
+      y = doc.lastAutoTable.finalY + 6;
+      if (ts.total.f) {
+        var mb = ts.rows.concat([ts.total]).map(function (s) { return [s.nr, s.name, s.f].concat(s.miss.map(function (c) { return c || '-'; }), [s.missNone || '-']); });
+        if (y > 160) { doc.addPage(); y = 16; }
+        doc.setFontSize(11); doc.text('Fehlwürfe nach Art', 14, y);
+        doc.autoTable({ startY: y + 2, head: [['Nr.', 'Name', 'Fehl'].concat(MISS.map(function (m) { return m[2]; }), ['o. A.'])], body: mb, styles: { fontSize: 9, halign: 'center' }, columnStyles: { 1: { halign: 'left' } }, headStyles: { fillColor: [160, 60, 30] },
+          didParseCell: function (d) { if (d.section === 'body' && d.row.index === mb.length - 1) d.cell.styles.fontStyle = 'bold'; } });
+        y = doc.lastAutoTable.finalY + 10;
+      } else y += 4;
     });
     doc.addPage();
     doc.setFontSize(14); doc.text('Wurfprotokoll', 14, 16);
-    doc.autoTable({ startY: 20, head: [['Mannschaft', 'Nr.', 'Name', 'Ergebnis', 'Position', 'Halbzeit', 'Spielzeit']], body: protocol(), styles: { fontSize: 9 }, headStyles: { fillColor: [12, 107, 79] } });
+    doc.autoTable({ startY: 20, head: [['Mannschaft', 'Nr.', 'Name', 'Ergebnis', 'Art', 'Position', 'Halbzeit', 'Spielzeit']], body: protocol(), styles: { fontSize: 9 }, headStyles: { fillColor: [12, 107, 79] } });
     return doc.output('arraybuffer');
   }
   function offer(ext, build) {
@@ -1349,6 +1399,8 @@ tr.total td { font-weight: 700; background: var(--bg); }
       out.push(TN(t) + ': ' + g + ' Tore, ' + (te.length - g) + ' Fehlwürfe');
       var h1 = cnt(te, function (e) { return isTor(e) && e.half === 1; });
       out.push('  1. Halbzeit: ' + h1 + ' Tore, 2. Halbzeit: ' + (g - h1) + ' Tore');
+      var mt = MISS.map(function (m) { var c = cnt(te, function (e) { return !isTor(e) && e.miss === m[0]; }); return c ? m[1] + ' ' + c : null; }).filter(Boolean);
+      if (mt.length) out.push('  Fehlwürfe nach Art: ' + mt.join(', '));
       var nums = {}; te.forEach(function (e) { nums[e.num] = 1; });
       Object.keys(nums).map(Number).filter(function (n) { return !isNaN(n); }).sort(function (a, b) { return a - b; }).forEach(function (n) {
         var pe = te.filter(function (e) { return e.num === n; });
