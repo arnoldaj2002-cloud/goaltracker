@@ -60,6 +60,8 @@ h2:first-child { margin-top: 12px; }
 .stepper b { font: 700 28px var(--font-display); min-width: 32px; text-align: center; }
 .ver { margin: 28px 0 0; text-align: center; font-size: 12px; color: var(--muted); }
 .brand { margin: 8px 0 6px; }
+.sharebox { margin-top: 10px; padding-top: 14px; border-top: 1px solid var(--line); display: grid; gap: 8px; text-align: center; }
+.sharebox p { margin: 0; }
 .logo { display: block; width: 100%; height: auto; margin: 0 auto; color: #3fbf93; }
 .brand .logo { max-width: 340px; }
 #wlogo { margin: 8px 0 -2px; }
@@ -427,6 +429,7 @@ tr.total td { font-weight: 700; background: var(--bg); }
     <button class="big" id="goArchive">Meine Spiele</button>
     <button id="goHelp">Anleitung</button>
     <p class="sub" id="liveNote" style="text-align:center"></p>
+    <div class="sharebox"><p class="sub">App an andere weitergeben</p><button id="goShare">Per WhatsApp weitergeben</button></div>
   </section>
 
   <!-- Spielliste -->
@@ -1305,6 +1308,13 @@ tr.total td { font-weight: 700; background: var(--bg); }
   }
   var helpFrom = 'home';
   function openHelp() { if (view !== 'help') helpFrom = view; view = 'help'; render(); window.scrollTo(0, 0); }
+  $('goShare').onclick = function () {
+    var url = 'https://arnoldaj2002-cloud.github.io/goaltracker/';
+    var link = 'https://wa.me/?text=' + encodeURIComponent('GoalTracker, der Handball-Torzähler: Spiele mitzählen und live ansehen. ' + url);
+    var w = null;
+    try { w = window.open(link, '_blank'); } catch (e) {}
+    if (!w) location.href = link;
+  };
   $('goHelp').onclick = openHelp; $('btnHelp').onclick = openHelp; $('btnHelpGame').onclick = openHelp;
   $('helpBack').onclick = function () { view = helpFrom || 'home'; render(); window.scrollTo(0, 0); };
   $('goArchive').onclick = openArchiveList;
